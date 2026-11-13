@@ -1,0 +1,197 @@
+rules_version = '2';
+
+// ============================================================
+// navi - Firestore rules
+//
+// navi is a static site, so these rules are the only guard. Like legi they
+// check the email too: a stranger signing in with Google on this project
+// cannot read or write anything, even under their own uid.
+//
+// drillKeys (the hidden answer of a drill) are never readable by the client.
+// Only Cloud Functions (Admin SDK, skips rules) touch them.
+//
+// __ALLOWED_USER_EMAIL__ is replaced by scripts/rules.mjs with the real email,
+// written to firestore.rules (gitignored). Edit this .template, not the output.
+// Keep in step with src/types/navi.ts.
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email == '__ALLOWED_USER_EMAIL__'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return allowed() && request.auth.uid == uid;
+    }
+
+    function str(v, max) {
+      return v is string && v.size() <= max;
+    }
+    function optStr(v, max) {
+      return v == null || str(v, max);
+    }
+    function optInt(v) {
+      return v == null || v is int;
+    }
+    function stamps(d) {
+      return d.createdAt is int && d.updatedAt is int;
+    }
+    function box(v) {
+      return v is int && v >= 1 && v <= 5;
+    }
+
+    function validProfile(d) {
+      return d.keys().hasOnly(['role','years','context','focus','hoursPerWeek'])
+        && str(d.role, 200) && str(d.context, 200) && str(d.focus, 200)
+        && d.years is int && d.years >= 0 && d.years <= 50
+        && d.hoursPerWeek is int && d.hoursPerWeek >= 1 && d.hoursPerWeek <= 40;
+    }
+
+    function validSkill(d) {
+      return d.keys().hasOnly(['name','area','level','evidence','createdAt','updatedAt'])
+        && str(d.name, 200) && d.name.size() > 0
+        && str(d.area, 100)
+        && d.level is int && d.level >= 0 && d.level <= 4
+        && d.evidence is list && d.evidence.size() <= 50
+        && stamps(d);
+    }
+
+    function validDrill(d) {
+      return d.keys().hasOnly(['group','type','level','topic','skillIds','brief','rounds','status',
+          'score','debrief','whatIf','newTerms','startedAt','doneAt'])
+        && d.group in ['tech','ai','comms','business','writing']
+        && str(d.type, 40)
+        && d.level in ['easy','medium','hard']
+        && str(d.topic, 200)
+        && d.skillIds is list && d.skillIds.size() <= 20
+        && str(d.brief, 8000)
+        && d.rounds is list && d.rounds.size() <= 8
+        && d.status in ['active','done','dropped']
+        && (d.score == null || d.score is map)
+        && optStr(d.debrief, 12000)
+        && d.whatIf is list && d.whatIf.size() <= 4
+        && d.newTerms is list && d.newTerms.size() <= 20
+        && d.startedAt is int && optInt(d.doneAt);
+    }
+
+    function validMistake(d) {
+      return d.keys().hasOnly(['drillId','skillId','text','lesson','box','nextReviewAt','createdAt'])
+        && str(d.drillId, 100) && optStr(d.skillId, 100)
+        && str(d.text, 1000) && d.text.size() > 0
+        && str(d.lesson, 1000)
+        && box(d.box) && d.nextReviewAt is int && d.createdAt is int;
+    }
+
+    function validTerm(d) {
+      return d.keys().hasOnly(['name','area','oneLine','checklist','status','source','sourceId','box',
+          'nextReviewAt','createdAt','updatedAt'])
+        && str(d.name, 120) && d.name.size() > 0
+        && str(d.area, 100)
+        && str(d.oneLine, 400)
+        && d.checklist is map
+        && d.status in ['new','learning','known']
+        && d.source in ['drill','module','manual']
+        && optStr(d.sourceId, 100)
+        && box(d.box) && optInt(d.nextReviewAt)
+        && stamps(d);
+    }
+
+    function validCourse(d) {
+      return d.keys().hasOnly(['title','goal','deadline','modules','status','createdAt','updatedAt'])
+        && str(d.title, 300) && d.title.size() > 0
+        && str(d.goal, 300)
+        && optInt(d.deadline)
+        && d.modules is list && d.modules.size() <= 600
+        && d.status in ['active','paused','done']
+        && stamps(d);
+    }
+
+    function validWeek(d) {
+      return d.keys().hasOnly(['plan','minutesPlanned','minutesDone','review','createdAt','updatedAt'])
+        && d.plan is map
+        && d.minutesPlanned is int && d.minutesPlanned >= 0
+        && d.minutesDone is int && d.minutesDone >= 0
+        && (d.review == null || d.review is map)
+        && stamps(d);
+    }
+
+    function validDay(d) {
+      return d.keys().hasOnly(['moduleIds','drillId','minutes','note','confidence','updatedAt'])
+        && d.moduleIds is list && d.moduleIds.size() <= 50
+        && optStr(d.drillId, 100)
+        && d.minutes is int && d.minutes >= 0 && d.minutes <= 1440
+        && str(d.note, 500)
+        && (d.confidence == null || (d.confidence is int && d.confidence >= 1 && d.confidence <= 5))
+        && d.updatedAt is int;
+    }
+
+    function validMilestone(d) {
+      return d.keys().hasOnly(['title','kind','needs','checklist','order','doneAt'])
+        && str(d.title, 200) && d.title.size() > 0
+        && d.kind in ['learning','career']
+        && d.needs is list && d.needs.size() <= 50
+        && d.checklist is list && d.checklist.size() <= 30
+        && d.order is number
+        && optInt(d.doneAt);
+    }
+
+    match /users/{uid}/meta/profile {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validProfile(request.resource.data);
+      allow delete: if false;
+    }
+    match /users/{uid}/skills/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validSkill(request.resource.data);
+    }
+    // Drills are created by Functions; the client may only read them and drop one.
+    match /users/{uid}/drills/{id} {
+      allow read: if isOwner(uid);
+      allow update: if isOwner(uid) && validDrill(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'dropped';
+      allow create, delete: if false;
+    }
+    match /users/{uid}/drillKeys/{id} {
+      allow read, write: if false;
+    }
+    match /users/{uid}/mistakes/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validMistake(request.resource.data);
+    }
+    match /users/{uid}/terms/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validTerm(request.resource.data);
+    }
+    match /users/{uid}/courses/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validCourse(request.resource.data);
+    }
+    match /users/{uid}/weeks/{week} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && week.matches('^[0-9]{4}-W[0-9]{2}$')
+        && validWeek(request.resource.data);
+      allow delete: if false;
+    }
+    match /users/{uid}/days/{day} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && validDay(request.resource.data);
+      allow delete: if false;
+    }
+    match /users/{uid}/milestones/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && validMilestone(request.resource.data);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
