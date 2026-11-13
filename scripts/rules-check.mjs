@@ -15,6 +15,17 @@ import { addDoc, collection, connectFirestoreEmulator, doc, getDoc, getFirestore
 // Denied writes are expected here; the SDK would log each one as an error.
 setLogLevel('silent');
 
+import { existsSync, readFileSync } from 'node:fs';
+
+// Same email as `npm run rules -- --emu`: .env.local, else the dev email.
+function allowedEmail() {
+  if (existsSync('.env.local')) {
+    const m = readFileSync('.env.local', 'utf8').match(/^\s*ALLOWED_USER_EMAIL\s*=\s*['"]?([^'"\s]+)/m);
+    if (m) return m[1].toLowerCase();
+  }
+  return 'dev@navi.test';
+}
+
 const apps = [];
 
 async function client(name, email) {
@@ -46,7 +57,7 @@ async function expect(label, shouldPass, fn) {
   console.log(`${good ? 'ok  ' : 'FAIL'} ${label} (${ok ? 'allowed' : 'denied'})`);
 }
 
-const me = await client('me', 'dev@navi.test');
+const me = await client('me', allowedEmail());
 const stranger = await client('stranger', 'someone@example.com');
 const mine = (...p) => doc(me.db, 'users', me.uid, ...p);
 
