@@ -103,7 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // accepts an unsigned JSON token). Popup/redirect need a cross-origin
       // iframe that test browsers often block.
       if (USE_EMULATORS) {
-        const token = JSON.stringify({ sub: 'dev-navi', email: allowedEmail, email_verified: true });
+        // One emulator account per email, so changing the email in .env.local just works.
+        const token = JSON.stringify({ sub: `dev-${allowedEmail}`, email: allowedEmail, email_verified: true });
         await signInWithCredential(getAuthClient(), GoogleAuthProvider.credential(token));
         return;
       }

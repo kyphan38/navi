@@ -148,6 +148,8 @@ ${transcript(brief, rounds)}
 The learner just answered round ${rounds.length}. Return JSON:
 - "reveal": what happens because of their answer, 1-3 short sentences. Stay true to the hidden story.
   If the answer was risky, show the real effect. Do not grade it and do not give the cause away.
+  Only show the result of what the learner did. Never take a new action for them (no "You roll back...").
+  The next round asks them what to do.
 - "round": round ${next} of ${ROUNDS[level]}, following the plan but reacting to what the learner did.
 
 ${roundRules(level)}`;
@@ -231,6 +233,12 @@ export function parseAnswer(text: string): AnswerResult {
   return { reveal: need(str(d.reveal, 2000), 'reveal'), round: parseRound(d.round) };
 }
 
+/** "1. a 2. b 3. c" on one line -> one step per line. */
+export function stepsOnLines(text: string): string {
+  if (text.includes('\n')) return text;
+  return text.replace(/\s+(?=\d{1,2}\.\s)/g, '\n');
+}
+
 export function parseFinish(text: string, type: DrillType): FinishResult {
   const d = parseJson(text);
   const used = DRILLS[type].criteria as readonly Criterion[];
@@ -247,7 +255,7 @@ export function parseFinish(text: string, type: DrillType): FinishResult {
   return {
     scores,
     debrief: need(str(d.debrief, 6000), 'debrief'),
-    seniorPath: str(d.seniorPath, 4000),
+    seniorPath: stepsOnLines(str(d.seniorPath, 4000)),
     whatIf: pairs(d.whatIf, (o) => (str(o.question, 400) ? { question: str(o.question, 400), answer: str(o.answer, 1000) } : null), 3),
     mistakes: pairs(d.mistakes, (o) => (str(o.text, 1000) ? { text: str(o.text, 1000), lesson: str(o.lesson, 1000) } : null), 3),
     newTerms: [...new Set((Array.isArray(d.newTerms) ? d.newTerms : []).map((t) => str(t, 120)).filter(Boolean))].slice(0, 8),

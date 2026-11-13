@@ -20,6 +20,8 @@ export default function DrillPlay() {
   const id = useSearchParams().get('id') ?? '';
   const [drill, setDrill] = useState<DrillDoc | null | undefined>(undefined);
   const [busy, setBusy] = useState<'answer' | 'finish' | null>(null);
+  // The answer being sent, shown in the log until the server saves it.
+  const [pending, setPending] = useState<{ round: number; text: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => (id ? watchDrill(uid, id, setDrill) : undefined), [uid, id]);
@@ -58,6 +60,7 @@ export default function DrillPlay() {
 
   const send = async (answer: string) => {
     setBusy('answer');
+    setPending({ round: drill.rounds.length, text: answer });
     setError(null);
     try {
       const { done } = await answerDrill({ drillId: drill.id, answer });
@@ -67,6 +70,7 @@ export default function DrillPlay() {
       }
     } catch (err) {
       setError(aiError(err));
+      setPending(null);
     }
     setBusy(null);
   };
@@ -75,6 +79,12 @@ export default function DrillPlay() {
     dropDrill(uid, drill.id);
     router.push('/drill/');
   };
+
+  // Show the sent answer at once; the snapshot replaces it when the server saves it.
+  const shown =
+    pending && pending.round === drill.rounds.length && current && !current.answer
+      ? { ...drill, rounds: [...drill.rounds.slice(0, -1), { ...current, answer: pending.text }] }
+      : drill;
 
   const meta =
     drill.status === 'active' ? `${Math.min(answered + 1, total)}/${total}` : drill.status === 'dropped' ? 'dropped' : `${total}/${total}`;
@@ -100,7 +110,7 @@ export default function DrillPlay() {
         <Debrief drill={drill} />
       ) : (
         <div className="mt-8">
-          <DrillLog drill={drill} />
+          <DrillLog drill={shown} />
           {drill.status === 'active' && (
             <div className="mt-6 pl-[3.75rem]">
               {busy ? (

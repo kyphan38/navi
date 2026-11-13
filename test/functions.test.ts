@@ -13,6 +13,7 @@ import {
   parseFinish,
   parseRound,
   parseStart,
+  stepsOnLines,
 } from '../functions/src/drill/prompts.ts';
 import { PLAIN_ENGLISH } from '../functions/src/style.ts';
 import { DRILL_TYPES } from '@/lib/drills';
@@ -88,4 +89,9 @@ test('cleanAnswer trims and rejects empty or huge answers', () => {
   assert.throws(() => cleanAnswer('   '));
   assert.throws(() => cleanAnswer('x'.repeat(3001)));
   assert.throws(() => cleanAnswer(42));
+});
+
+test('stepsOnLines puts each numbered step on its own line', () => {
+  assert.equal(stepsOnLines('1. Look first. 2. Roll back 2.13.9 now. 3. Tell people.'), '1. Look first.\n2. Roll back 2.13.9 now.\n3. Tell people.');
+  assert.equal(stepsOnLines('1. a\n2. b'), '1. a\n2. b');
 });
