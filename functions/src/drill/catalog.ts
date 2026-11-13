@@ -2,7 +2,7 @@
 // Pure file: the root test suite imports it.
 
 export type DrillLevel = 'easy' | 'medium' | 'hard';
-export type AnswerKind = 'choice' | 'text' | 'order' | 'command' | 'message';
+export type AnswerKind = 'choice' | 'multi' | 'text' | 'order' | 'command' | 'message';
 export type Criterion = 'triage' | 'hypothesis' | 'safety' | 'comms' | 'prevention';
 
 export const CRITERIA: readonly Criterion[] = ['triage', 'hypothesis', 'safety', 'comms', 'prevention'];
@@ -332,9 +332,10 @@ export const ROUNDS: Record<DrillLevel, number> = { easy: 3, medium: 4, hard: 5 
 
 /** Which answer kinds each round uses, by level (PLAN-navi.md 6.2). */
 export function kindRule(level: DrillLevel): string {
-  if (level === 'easy') return `Use "choice" for every round (4 options, one clearly best). Give a short hint.`;
+  if (level === 'easy')
+    return `Use "choice" for most rounds (4 options, one clearly best). Use "multi" once when several answers are truly right. Give a short hint.`;
   if (level === 'medium')
-    return `Use "choice" for round 1. Use "text", "command" or "message" for the key rounds. Use "order" at most once (4-5 items to rank). Hint is an empty string.`;
+    return `Use "choice" or "multi" for round 1. Use "text", "command" or "message" for the key rounds. Use "order" at most once (4-5 items to rank). Hint is an empty string.`;
   return `Use only "text", "command" or "message". Leave out some facts and add one misleading fact. Hint is an empty string.`;
 }
 

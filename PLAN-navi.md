@@ -342,6 +342,12 @@ Argon không có streaming. Timeout mỗi callable 60s.
 | medium | Vòng quan trọng là `text`/`command`/`message`, còn lại `choice` | 4-5 vòng |
 | hard | Tự viết hết | Thiếu thông tin, có thông tin gây nhiễu, đồng hồ đếm (chỉ hiện số, không nháy) |
 
+Thêm 2026-11-13 (chủ app yêu cầu):
+- Kiểu trả lời `multi` ("pick all that apply", 5 lựa chọn, 2-3 đúng) cho easy/medium, khi nhiều đáp án cùng đúng
+  (ví dụ tìm hết lỗi trong một policy).
+- Vòng về "lần sau tránh thế nào" luôn hướng tới chặn tự động: CI check trên pull request, policy as code,
+  pipeline gate hoặc alert. Debrief có thêm mục `automate it` (công cụ, chạy ở đâu, chặn cái gì).
+
 **Mở mức:** mỗi loại bài bắt đầu ở easy. Lên medium khi 3 bài easy gần nhất của loại đó đều >= 70%.
 Lên hard tương tự từ medium. Người dùng luôn có thể chọn mức thấp hơn. Không bao giờ tự hạ mức.
 

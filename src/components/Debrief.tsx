@@ -80,6 +80,13 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
         </div>
       </section>
 
+      {drill.automate && (
+        <section>
+          <SectionTitle>automate it</SectionTitle>
+          <Prose text={drill.automate} className="text-ink" />
+        </section>
+      )}
+
       {mistakes.length > 0 && (
         <section>
           <SectionTitle>to fix</SectionTitle>

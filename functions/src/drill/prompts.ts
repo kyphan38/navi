@@ -21,10 +21,11 @@ export type FinishResult = {
   seniorPath: string;
   whatIf: { question: string; answer: string }[];
   mistakes: { text: string; lesson: string }[];
+  automate: string;
   newTerms: TermCard[];
 };
 
-const KINDS: readonly AnswerKind[] = ['choice', 'text', 'order', 'command', 'message'];
+const KINDS: readonly AnswerKind[] = ['choice', 'multi', 'text', 'order', 'command', 'message'];
 
 const ROUND_SCHEMA = {
   type: 'object',
@@ -77,9 +78,10 @@ export const FINISH_SCHEMA = {
       type: 'array',
       items: { type: 'object', properties: { text: { type: 'string' }, lesson: { type: 'string' } }, required: ['text', 'lesson'] },
     },
+    automate: { type: 'string' },
     newTerms: { type: 'array', items: TERM_ITEM_SCHEMA },
   },
-  required: ['scores', 'debrief', 'seniorPath', 'whatIf', 'mistakes', 'newTerms'],
+  required: ['scores', 'debrief', 'seniorPath', 'whatIf', 'mistakes', 'automate', 'newTerms'],
 };
 
 function aboutLearner(p: Profile): string {
@@ -89,10 +91,13 @@ function aboutLearner(p: Profile): string {
 function roundRules(level: DrillLevel): string {
   return `Round rules:
 - "prompt": what happens now and the question. 1-4 short sentences. Code goes in a fenced block.
-- "kind": one of choice, text, order, command, message.
-  choice = pick one option. order = rank the options. command = write a CLI command or query. message = write a short message to people.
-- "options": 4 options for choice, 4-5 items for order, else [].
+- "kind": one of choice, multi, text, order, command, message.
+  choice = pick one option. multi = pick ALL that apply (say "Pick all that apply." in the prompt; 2-3 of 5 are right).
+  order = rank the options. command = write a CLI command or query. message = write a short message to people.
+- "options": 4 options for choice, 5 for multi, 4-5 items for order, else [].
   Make wrong options look sensible (things a junior might really do). Do not mark the best one.
+- When a round is about stopping the problem next time, push for an automatic guard where it fits:
+  a CI check on the pull request, policy as code, a pipeline gate, or an alert. Not only "be careful".
 - ${kindRule(level)}`;
 }
 
@@ -182,6 +187,9 @@ Return JSON:
 - "seniorPath": the senior steps as a numbered list, one line each, with a short reason.
 - "whatIf": 2 items. A "What if...?" twist on this drill and a short answer (2-3 sentences).
 - "mistakes": 0-3 items. Each: "text" = what the learner did wrong (1 sentence), "lesson" = what to do instead (1 sentence).
+- "automate": how to make a machine catch this next time, so no human has to remember: a CI check on the pull request,
+  policy as code, a pipeline gate, a test, or an alert. Name the tool or check, where it runs, and what it blocks.
+  2-4 short sentences. Use "" only when nothing technical can be automated (for example a pure people skill).
 - "newTerms": 2-6 technical terms from this drill that are worth learning. Each item:
   ${TERM_CARD_RULES.split('\n').join('\n  ')}`;
 }
@@ -199,12 +207,13 @@ export function parseRound(raw: unknown): Round {
   const r = (raw ?? {}) as Record<string, unknown>;
   const kind = KINDS.includes(r.kind as AnswerKind) ? (r.kind as AnswerKind) : 'text';
   const options = Array.isArray(r.options) ? r.options.map((o) => str(o, 400)).filter(Boolean).slice(0, 6) : [];
-  // A choice or order round with too few options cannot be answered; ask for free text instead.
-  const fixedKind = (kind === 'choice' || kind === 'order') && options.length < 2 ? 'text' : kind;
+  const listed = kind === 'choice' || kind === 'multi' || kind === 'order';
+  // Too few options to answer (multi needs 3+): ask for free text instead.
+  const fixedKind = listed && options.length < (kind === 'multi' ? 3 : 2) ? 'text' : kind;
   return {
     prompt: need(str(r.prompt, 4000), 'round prompt'),
     kind: fixedKind,
-    options: fixedKind === 'choice' || fixedKind === 'order' ? options : [],
+    options: fixedKind === 'choice' || fixedKind === 'multi' || fixedKind === 'order' ? options : [],
     hint: str(r.hint, 400),
   };
 }
@@ -273,6 +282,7 @@ export function parseFinish(text: string, type: DrillType): FinishResult {
     seniorPath: stepsOnLines(str(d.seniorPath, 4000)),
     whatIf: pairs(d.whatIf, (o) => (str(o.question, 400) ? { question: str(o.question, 400), answer: str(o.answer, 1000) } : null), 3),
     mistakes: pairs(d.mistakes, (o) => (str(o.text, 1000) ? { text: str(o.text, 1000), lesson: str(o.lesson, 1000) } : null), 3),
+    automate: str(d.automate, 1200),
     newTerms: uniqueCards(Array.isArray(d.newTerms) ? d.newTerms : []).slice(0, 8),
   };
 }

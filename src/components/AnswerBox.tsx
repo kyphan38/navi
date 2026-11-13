@@ -6,6 +6,7 @@ import type { Round } from '@/types/navi';
 
 const PLACEHOLDER: Record<Round['kind'], string> = {
   choice: '',
+  multi: '',
   order: '',
   text: 'Your answer',
   command: 'The command you would run',
@@ -18,6 +19,7 @@ const PLACEHOLDER: Record<Round['kind'], string> = {
  */
 export default function AnswerBox({ round, busy, onSend }: { round: Round; busy: boolean; onSend: (answer: string) => void }) {
   const [picked, setPicked] = useState<number | null>(null); // -1 = other
+  const [many, setMany] = useState<number[]>([]); // multi: picked options, in option order
   const [order, setOrder] = useState<number[]>([]);
   const [text, setText] = useState('');
   const [showHint, setShowHint] = useState(false);
@@ -26,6 +28,9 @@ export default function AnswerBox({ round, busy, onSend }: { round: Round; busy:
     if (round.kind === 'choice') {
       if (picked === -1) return text.trim();
       return picked === null ? '' : round.options[picked];
+    }
+    if (round.kind === 'multi') {
+      return many.length ? [...many].sort((a, b) => a - b).map((i) => `- ${round.options[i]}`).join('\n') : '';
     }
     if (round.kind === 'order') {
       return order.length === round.options.length ? order.map((i, n) => `${n + 1}. ${round.options[i]}`).join('\n') : '';
@@ -51,7 +56,7 @@ export default function AnswerBox({ round, busy, onSend }: { round: Round; busy:
       rows={round.kind === 'message' ? 4 : 3}
       maxLength={3000}
       placeholder={PLACEHOLDER[round.kind] || 'Your answer'}
-      autoFocus={round.kind !== 'choice' && round.kind !== 'order'}
+      autoFocus={round.kind !== 'choice' && round.kind !== 'multi' && round.kind !== 'order'}
       className={`w-full resize-y rounded-md border border-line bg-surface px-3 py-2 text-[16px] leading-relaxed text-ink placeholder:text-faint focus:border-line-strong ${round.kind === 'command' ? 'font-mono text-[15px]' : ''}`}
     />
   );
@@ -77,6 +82,31 @@ export default function AnswerBox({ round, busy, onSend }: { round: Round; busy:
         </ul>
       )}
       {round.kind === 'choice' && picked === -1 && textArea}
+
+      {round.kind === 'multi' && (
+        <div>
+          <p className="mb-1 font-mono text-[12px] text-faint">pick all that apply</p>
+          <ul>
+            {round.options.map((o, i) => {
+              const on = many.includes(i);
+              return (
+                <li key={i}>
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={on}
+                    onClick={() => setMany((s) => (on ? s.filter((x) => x !== i) : [...s, i]))}
+                    className={`flex w-full items-baseline gap-3 py-1.5 text-left text-[15px] transition-colors ${on ? 'text-ink' : 'text-muted hover:text-ink'}`}
+                  >
+                    <span className={`relative top-[1px] size-2.5 shrink-0 rounded-[2px] border ${on ? 'border-ink bg-ink' : 'border-line-strong'}`} aria-hidden />
+                    {o}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       {round.kind === 'order' && (
         <div>
@@ -106,7 +136,7 @@ export default function AnswerBox({ round, busy, onSend }: { round: Round; busy:
         </div>
       )}
 
-      {round.kind !== 'choice' && round.kind !== 'order' && textArea}
+      {round.kind !== 'choice' && round.kind !== 'multi' && round.kind !== 'order' && textArea}
 
       <div className="flex items-center gap-5">
         <button

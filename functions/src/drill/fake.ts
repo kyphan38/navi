@@ -71,6 +71,8 @@ export function fakeFinish(): string {
       { text: 'You did not check for double payments.', lesson: 'After a payment incident, always check for stuck or double transactions.' },
       { text: 'You did not post a status update early.', lesson: 'Post a short update in the first 10 minutes, even if you do not know the cause.' },
     ],
+    automate:
+      'Add a CI check on every pull request that fails when the DB pool size drops below 30. Also add a CloudWatch alarm at 80% pool use.',
     newTerms: [
       { name: 'connection pool', area: 'Data', oneLine: 'A set of open database links that requests share.' },
       { name: 'rollback', area: 'Delivery', oneLine: 'Going back to the last working version.' },

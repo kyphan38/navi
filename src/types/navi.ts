@@ -36,12 +36,12 @@ export type DrillType =
   | 'payment-case' | 'business-impact'                                                 // business
   | 'postmortem' | 'cr-risk' | 'prioritize';                                           // writing
 export type DrillLevel = 'easy' | 'medium' | 'hard';
-export type AnswerKind = 'choice' | 'text' | 'order' | 'command' | 'message';
+export type AnswerKind = 'choice' | 'multi' | 'text' | 'order' | 'command' | 'message';
 
 export type Round = {
   prompt: string;
   kind: AnswerKind;
-  options: string[];           // choice: pick one; order: rank all; else []
+  options: string[];           // choice: pick one; multi: pick all that apply; order: rank all; else []
   hint: string;                // easy level only, else ''
   answer?: string;
   reveal?: string;             // what happened after the answer (not on the last round)
@@ -62,6 +62,7 @@ export type Drill = {
   debrief: string | null;
   seniorPath: string | null;
   whatIf: { question: string; answer: string }[];
+  automate?: string;           // how a machine can catch it next time (CI check, policy as code, alert)
   newTerms: string[];
   tagged?: boolean;            // skillIds were set by skillTag (may still be empty)
   startedAt: number; doneAt: number | null;

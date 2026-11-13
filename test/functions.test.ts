@@ -95,3 +95,21 @@ test('stepsOnLines puts each numbered step on its own line', () => {
   assert.equal(stepsOnLines('1. Look first. 2. Roll back 2.13.9 now. 3. Tell people.'), '1. Look first.\n2. Roll back 2.13.9 now.\n3. Tell people.');
   assert.equal(stepsOnLines('1. a\n2. b'), '1. a\n2. b');
 });
+
+test('parseRound keeps multi with 3+ options, else asks for free text', () => {
+  assert.deepEqual(parseRound({ prompt: 'Pick all that apply.', kind: 'multi', options: ['a', 'b', 'c', 'd', 'e'], hint: '' }).kind, 'multi');
+  assert.deepEqual(parseRound({ prompt: 'Q', kind: 'multi', options: ['a', 'b'], hint: '' }), { prompt: 'Q', kind: 'text', options: [], hint: '' });
+});
+
+test('round rules offer multi and push for automatic guards', () => {
+  const p = buildStartPrompt(profile, 'security-review', 'medium', 'S3');
+  assert.ok(p.includes('multi = pick ALL that apply'));
+  assert.ok(p.includes('a CI check on the pull request'));
+});
+
+test('parseFinish keeps the automate advice, empty when not given', () => {
+  assert.ok(parseFinish(fakeFinish(), 'incident').automate.includes('CI check'));
+  const raw = JSON.parse(fakeFinish());
+  delete raw.automate;
+  assert.equal(parseFinish(JSON.stringify(raw), 'feedback').automate, '');
+});
