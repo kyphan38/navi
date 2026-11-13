@@ -537,9 +537,17 @@ Ghi chú khi làm:
   Milestone mặc định: khóa học, "Core skills at do" (8 skill bảo mật + reliability ở mức 2), "Ready for mid-level" (6 việc).
 - `explainBack`: câu hỏi bằng Flash, chấm bằng Hydrogen (giống chấm drill). Chấm khá nghiêm, nêu đúng chỗ thiếu.
 
-### P5 - Thêm bài tập
+### P5 - Thêm bài tập (xong 2026-11-13)
 17 loại còn lại (mục 6.3), mức hard, luật mở mức 6.2, chọn bài hôm nay theo 6.4, sổ lỗi sai + ôn lỗi sai.
 **Done:** mỗi loại làm thử 1 bài easy. Unit test luật mở mức và chọn bài.
+Ghi chú khi làm:
+- Thử thật: Hydrogen viết 1 bài easy cho cả 17 loại mới, tất cả parse được, 10-44 giây mỗi bài.
+- Mở mức kiểm cả ở client và server (`openLevels`, test giữ hai bên giống nhau). Mức đã từng làm thì vẫn mở.
+- Chọn bài hôm nay: ngày chẵn là nhóm tech, ngày lẻ xoay 4 nhóm còn lại, Chủ nhật là incident ở mức cao nhất đã mở.
+  Chủ đề từ khóa học chỉ dùng cho nhóm tech.
+- Ôn lỗi sai không gọi AI (khác plan mục 10): xem lỗi, tự nghĩ cách đúng, `show` bài học, rồi `knew it` / `not yet`.
+  Ôn term và lỗi sai chung một trang `/review/`, tối đa 5 mục mỗi ngày.
+- Mức hard có đồng hồ 5 phút mỗi vòng (chỉ hiện số, hết giờ hiện `over`, không chặn).
 
 ### P6 - Thông tin bên ngoài
 `askSenior`, `postmortemPick`, `weeklyDigest` (tối đa 5 mục, chia `inside banking` / `outside`, mỗi mục 1 dòng

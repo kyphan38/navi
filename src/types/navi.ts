@@ -81,7 +81,7 @@ export type Mistake = {
   text: string;
   lesson: string;
   box: 1 | 2 | 3 | 4 | 5;      // Leitner
-  nextReviewAt: number;
+  nextReviewAt: number | null; // null = learned, no more reviews
   createdAt: number;
 };
 

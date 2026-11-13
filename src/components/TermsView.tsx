@@ -7,7 +7,7 @@ import { useState, type FormEvent } from 'react';
 import { useUid } from '@/components/AuthGate';
 import PageHead from '@/components/PageHead';
 import TermQuiz from '@/components/TermQuiz';
-import TermReview from '@/components/TermReview';
+import Review from '@/components/Review';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
 import { useNow } from '@/hooks/useNow';
@@ -109,7 +109,8 @@ export default function TermsView() {
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (params.get('review') === '1') return <TermReview />;
+  // Old links: /terms/?review=1 now shows the shared review.
+  if (params.get('review') === '1') return <Review />;
 
   const list = terms ?? [];
   const due = now ? dueItems(list, now, 99).length : 0;
@@ -168,7 +169,7 @@ export default function TermsView() {
           </button>
         ))}
         {due > 0 && (
-          <Link href="/terms/?review=1" className="ml-auto text-ink">
+          <Link href="/review/" className="ml-auto text-ink">
             review {due}
           </Link>
         )}

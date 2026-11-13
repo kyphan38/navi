@@ -85,7 +85,7 @@ service cloud.firestore {
         && str(d.drillId, 100) && optStr(d.skillId, 100)
         && str(d.text, 1000) && d.text.size() > 0
         && str(d.lesson, 1000)
-        && box(d.box) && d.nextReviewAt is int && d.createdAt is int;
+        && box(d.box) && optInt(d.nextReviewAt) && d.createdAt is int;
     }
 
     function validTerm(d) {

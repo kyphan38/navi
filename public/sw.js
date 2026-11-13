@@ -18,7 +18,7 @@
 // ============================================================
 
 const CACHE_VERSION = 'navi-v1';
-const PAGES = ['/', '/drill/', '/drill/play/', '/learn/', '/terms/', '/map/', '/settings/', '/login/'];
+const PAGES = ['/', '/drill/', '/drill/play/', '/review/', '/learn/', '/terms/', '/map/', '/settings/', '/login/'];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

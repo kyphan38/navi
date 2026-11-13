@@ -73,3 +73,62 @@ test('topicForDay rotates through the week topics', () => {
   const b = topicForDay('2026-11-14', ['x', 'y']);
   assert.ok(a && b && a !== b);
 });
+
+import { openLevels as serverOpenLevels } from '../functions/src/drill/catalog.ts';
+import { DRILL_TYPES, GROUPS, openLevels, typeForDay, unlockProgress } from '@/lib/drills';
+import { addDays, parseDay } from '@/lib/day';
+import type { DrillLevel, Score } from '@/types/navi';
+
+const sc = (p: number): Score => {
+  const v = Math.round((p / 100) * 3);
+  return { triage: v, hypothesis: v, safety: v, comms: v, prevention: v };
+};
+const h = (...xs: [DrillLevel, number][]) => xs.map(([level, p]) => ({ level, score: sc(p) }));
+
+test('openLevels: medium after 3 easy at 70%+, hard after 3 medium', () => {
+  assert.deepEqual(openLevels([]), ['easy']);
+  assert.deepEqual(openLevels(h(['easy', 100], ['easy', 100])), ['easy']);
+  assert.deepEqual(openLevels(h(['easy', 100], ['easy', 67], ['easy', 100])), ['easy']); // one below 70%
+  assert.deepEqual(openLevels(h(['easy', 100], ['easy', 100], ['easy', 100])), ['easy', 'medium']);
+  assert.deepEqual(openLevels(h(['medium', 100], ['medium', 100], ['medium', 100], ['easy', 0])), ['easy', 'medium', 'hard']);
+});
+
+test('openLevels: a level already used stays open, older scores do not count', () => {
+  assert.deepEqual(openLevels(h(['medium', 0])), ['easy', 'medium']);
+  // Last 3 easy: two bad ones are newest.
+  assert.deepEqual(openLevels(h(['easy', 0], ['easy', 0], ['easy', 100], ['easy', 100], ['easy', 100])), ['easy']);
+});
+
+test('client and server unlock rules agree', () => {
+  const levels: DrillLevel[] = ['easy', 'medium', 'hard'];
+  for (let seed = 1; seed < 300; seed++) {
+    const hist = Array.from({ length: seed % 9 }, (_, i) => ({ level: levels[(seed * (i + 3)) % 3], score: sc(((seed * 37 + i * 53) % 101)) }));
+    assert.deepEqual(openLevels(hist), serverOpenLevels(hist), `seed ${seed}`);
+  }
+});
+
+test('unlockProgress counts good drills toward the next level', () => {
+  assert.deepEqual(unlockProgress(h(['easy', 100], ['easy', 0])), { next: 'medium', good: 1 });
+  assert.equal(unlockProgress(h(['medium', 0], ['hard', 0])), null);
+});
+
+test('typeForDay: Sunday is incident, about half the days are tech, all types show up', () => {
+  const seen = new Set<string>();
+  let tech = 0;
+  for (let i = 0; i < 140; i++) {
+    const day = addDays('2026-11-16', i);
+    const t = typeForDay(day);
+    seen.add(t);
+    if (DRILL_TYPES.find((d) => d.type === t)?.group === 'tech') tech++;
+    if (parseDay(day).getDay() === 0) assert.equal(t, 'incident');
+  }
+  assert.equal(seen.size, DRILL_TYPES.length);
+  assert.ok(tech > 60 && tech < 90, `tech days: ${tech}`);
+  assert.equal(GROUPS.length, 5);
+});
+
+test('client drill list matches the server catalog and groups', async () => {
+  const { DRILLS } = await import('../functions/src/drill/catalog.ts');
+  assert.deepEqual(DRILL_TYPES.map((t) => t.type).sort(), Object.keys(DRILLS).sort());
+  for (const t of DRILL_TYPES) assert.equal(t.group, DRILLS[t.type as keyof typeof DRILLS].group, t.type);
+});

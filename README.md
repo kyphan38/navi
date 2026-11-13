@@ -82,6 +82,10 @@ Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THI
   `src/lib/plan.ts` takes about 70% of the real weekly average (last 4 planned weeks,
   profile hours until there are 2) and picks the next modules. Today spreads them over
   the days left. Being late moves the finish date; old work never piles onto next week.
+- **More drills (P5):** 19 types in 5 groups (`functions/src/drill/catalog.ts`). Medium opens
+  after 3 easy drills in a row at 70%+, hard after 3 medium (`openLevels`, checked on the
+  server too). Hard rounds show a 5 minute timer. Mistakes from drills and due terms share
+  one review at `/review/` (Leitner, at most 5 a day, no AI call).
 - **Skills and Map (P4):** levels 1-4 come from evidence (`src/lib/skill-level.ts`): done
   modules and demos, medium+ drills at 70%+, "used at work" notes, and a passed
   "Explain it back". `skillTag` tags modules and drills with skills. The Map shows the

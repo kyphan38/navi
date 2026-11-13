@@ -25,7 +25,7 @@ import {
 
 import { getDb } from '@/lib/firebase-client';
 import { normalizeProfile } from '@/lib/profile';
-import type { Course, Day, Drill, Evidence, Milestone, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
+import type { Course, Day, Drill, Evidence, Milestone, Mistake, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -249,4 +249,21 @@ export function addMilestones(uid: string, list: Omit<Milestone, 'doneAt'>[]): v
 
 export function updateMilestone(uid: string, id: string, patch: Partial<Pick<Milestone, 'checklist' | 'doneAt'>>): void {
   void updateDoc(doc(milestonesCol(uid), id), patch).catch((err) => console.warn('[repo] update milestone', err));
+}
+
+// ------------------------------------------------------------------ mistakes (P5)
+
+export type MistakeDoc = Mistake & { id: string };
+const mistakesCol = (uid: string) => collection(getDb(), 'users', uid, 'mistakes');
+
+export function watchMistakes(uid: string, cb: (items: MistakeDoc[]) => void): () => void {
+  return onSnapshot(
+    query(mistakesCol(uid), orderBy('createdAt', 'desc'), limit(200)),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Mistake) }))),
+    (err) => console.warn('[repo] mistakes', err),
+  );
+}
+
+export function updateMistake(uid: string, id: string, patch: Pick<Mistake, 'box' | 'nextReviewAt'>): void {
+  void updateDoc(doc(mistakesCol(uid), id), patch).catch((err) => console.warn('[repo] update mistake', err));
 }

@@ -9,6 +9,7 @@ import { useUid } from '@/components/AuthGate';
 import Debrief from '@/components/Debrief';
 import { DrillLog } from '@/components/DrillLog';
 import PageHead from '@/components/PageHead';
+import RoundTimer from '@/components/RoundTimer';
 import Waiting from '@/components/Waiting';
 import { aiError, answerDrill, finishDrill } from '@/lib/ai';
 import { ROUNDS, typeLabel } from '@/lib/drills';
@@ -121,7 +122,14 @@ export default function DrillPlay() {
                 </button>
               ) : current && !current.answer ? (
                 // key: a fresh box (no old pick or text) for each round
-                <AnswerBox key={drill.rounds.length} round={current} busy={busy !== null} onSend={(a) => void send(a)} />
+                <div key={drill.rounds.length}>
+                  {drill.level === 'hard' && (
+                    <div className="mb-2">
+                      <RoundTimer />
+                    </div>
+                  )}
+                  <AnswerBox round={current} busy={busy !== null} onSend={(a) => void send(a)} />
+                </div>
               ) : null}
               {error && (
                 <p role="alert" className="mt-3 text-[14px] text-muted">

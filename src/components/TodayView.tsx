@@ -10,6 +10,7 @@ import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
 import { useLearning } from '@/hooks/useLearning';
 import { useNow } from '@/hooks/useNow';
+import { useMistakes } from '@/hooks/useMistakes';
 import { useTerms } from '@/hooks/useTerms';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { useTick } from '@/hooks/useTick';
@@ -41,9 +42,10 @@ export default function TodayView() {
   const pick = day && drills ? todayDrill(day, drills) : null;
   const terms = useTerms();
   const now = useNow();
-  // Review shows once anything is in review; done = nothing due right now.
-  const inReview = (terms ?? []).some((t) => t.status === 'learning');
-  const due = terms && now ? dueItems(terms, now).length : 0;
+  const mistakes = useMistakes();
+  // Review shows once anything is in review; done = nothing due right now. At most 5 a day.
+  const inReview = (terms ?? []).some((t) => t.status === 'learning') || (mistakes ?? []).some((m) => m.nextReviewAt !== null);
+  const due = terms && mistakes && now ? dueItems([...terms, ...mistakes], now).length : 0;
   const learning = useLearning();
   const { course, week, todayDoc } = learning;
   const tick = useTick(course, day, todayDoc);
@@ -112,8 +114,8 @@ export default function TodayView() {
           {inReview && (
             <Stop done={due === 0} label="review">
               {due > 0 ? (
-                <Link href="/terms/?review=1" className="group inline-flex items-baseline gap-3">
-                  <span className="text-ink">{due} {due === 1 ? 'term' : 'terms'}</span>
+                <Link href="/review/" className="group inline-flex items-baseline gap-3">
+                  <span className="text-ink">{due} to review</span>
                   <span className="text-faint transition-colors group-hover:text-ink">start</span>
                 </Link>
               ) : (

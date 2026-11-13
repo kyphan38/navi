@@ -32,7 +32,7 @@ import {
   type TagItem,
 } from './skills.ts';
 import { MAX_TOC, SPLIT_SCHEMA, buildSplitPrompt, chunkToc, fakeSplit, parseSplit, type SplitModule } from './course.ts';
-import { DRILLS, ROUNDS, isDrillType, type DrillLevel, type DrillType } from './drill/catalog.ts';
+import { DRILLS, ROUNDS, isDrillType, openLevels, type DrillLevel, type DrillType } from './drill/catalog.ts';
 import { fakeAnswer, fakeFinish, fakeStart } from './drill/fake.ts';
 import {
   ANSWER_SCHEMA,
@@ -188,8 +188,16 @@ export const drillStart = onCall(OPTS, async (req) => {
   const { type, level, topic: rawTopic } = (req.data ?? {}) as Record<string, unknown>;
   if (!isDrillType(type)) throw new HttpsError('invalid-argument', 'Unknown drill type');
   const spec = DRILLS[type];
-  if (typeof level !== 'string' || !(spec.levels as readonly string[]).includes(level)) throw new HttpsError('invalid-argument', 'Level not open');
+  if (typeof level !== 'string' || !(spec.levels as readonly string[]).includes(level)) throw new HttpsError('invalid-argument', 'Unknown level');
   const lvl = level as DrillLevel;
+  if (lvl !== 'easy') {
+    // Two equality filters need no composite index; sort here.
+    const past = await getFirestore().collection(`users/${uid}/drills`).where('type', '==', type).where('status', '==', 'done').get();
+    const done = past.docs
+      .map((d) => d.data() as { level: DrillLevel; score: Record<string, number | null> | null; doneAt: number | null })
+      .sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0));
+    if (!openLevels(done).includes(lvl)) throw new HttpsError('failed-precondition', 'Level not open yet');
+  }
   const topic =
     typeof rawTopic === 'string' && rawTopic.trim()
       ? rawTopic.trim().slice(0, 200)
