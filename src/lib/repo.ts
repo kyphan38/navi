@@ -25,7 +25,7 @@ import {
 
 import { getDb } from '@/lib/firebase-client';
 import { normalizeProfile } from '@/lib/profile';
-import type { Course, Day, Drill, Evidence, Milestone, Mistake, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
+import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -266,4 +266,30 @@ export function watchMistakes(uid: string, cb: (items: MistakeDoc[]) => void): (
 
 export function updateMistake(uid: string, id: string, patch: Pick<Mistake, 'box' | 'nextReviewAt'>): void {
   void updateDoc(doc(mistakesCol(uid), id), patch).catch((err) => console.warn('[repo] update mistake', err));
+}
+
+// ------------------------------------------------------------------ digests, asks (P6)
+
+export type DigestDoc = Digest & { id: string };
+export type AskDoc = Ask & { id: string };
+
+/** Newest 8 weekly digests. */
+export function watchDigests(uid: string, cb: (items: DigestDoc[]) => void): () => void {
+  return onSnapshot(
+    query(collection(getDb(), 'users', uid, 'digests'), orderBy('createdAt', 'desc'), limit(8)),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Digest) }))),
+    (err) => console.warn('[repo] digests', err),
+  );
+}
+
+export function watchAsks(uid: string, cb: (items: AskDoc[]) => void): () => void {
+  return onSnapshot(
+    query(collection(getDb(), 'users', uid, 'asks'), orderBy('createdAt', 'desc'), limit(50)),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Ask) }))),
+    (err) => console.warn('[repo] asks', err),
+  );
+}
+
+export function deleteAsk(uid: string, id: string): void {
+  void deleteDoc(doc(getDb(), 'users', uid, 'asks', id)).catch((err) => console.warn('[repo] delete ask', err));
 }

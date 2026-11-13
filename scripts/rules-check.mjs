@@ -62,6 +62,10 @@ const me = await client('me', allowedEmail());
 const stranger = await client('stranger', 'someone@example.com');
 const mine = (...p) => doc(me.db, 'users', me.uid, ...p);
 
+// The emulator account can be the same one the app uses: keep its profile and
+// write test days far in the past, so a check never changes real test data.
+const savedProfile = await getDoc(mine('meta', 'profile'));
+
 await expect('owner writes a valid profile', true, () => setDoc(mine('meta', 'profile'), profile));
 await expect('owner reads the profile', true, () => getDoc(mine('meta', 'profile')));
 await expect('owner writes years = 99', false, () => setDoc(mine('meta', 'profile'), { ...profile, years: 99 }));
@@ -77,8 +81,10 @@ await expect('owner writes a bad day id', false, () =>
   setDoc(mine('days', 'today'), { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, updatedAt: 1 }),
 );
 await expect('owner writes a valid day', true, () =>
-  setDoc(mine('days', '2026-11-13'), { moduleIds: [], drillId: null, minutes: 30, note: '', confidence: 3, updatedAt: 1 }),
+  setDoc(mine('days', '2000-01-01'), { moduleIds: [], drillId: null, minutes: 30, note: '', confidence: 3, updatedAt: 1 }),
 );
+
+if (savedProfile.exists()) await setDoc(mine('meta', 'profile'), savedProfile.data());
 
 await Promise.all(apps.map((a) => deleteApp(a)));
 console.log(failed ? `\n${failed} check(s) failed` : '\nall rules checks passed');

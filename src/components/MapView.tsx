@@ -6,6 +6,7 @@ import { useUid } from '@/components/AuthGate';
 import ExplainBack from '@/components/ExplainBack';
 import MapRoute, { type RouteStop } from '@/components/MapRoute';
 import MapWhatIf from '@/components/MapWhatIf';
+import OneOnOnePrep from '@/components/OneOnOnePrep';
 import PageHead from '@/components/PageHead';
 import Waiting from '@/components/Waiting';
 import { useMapData, type SkillView } from '@/hooks/useMapData';
@@ -131,7 +132,7 @@ function Milestones({ items, now }: { items: { m: MilestoneDoc; done: boolean; d
 
 export default function MapView() {
   const now = useNow();
-  const { learning, skills, milestones, days, tagging, tagError } = useMapData();
+  const { learning, drills, skills, milestones, days, tagging, tagError } = useMapData();
   const realHours = Math.round((learning.budget.minutes / 60) * 2) / 2 || 2;
   const [hoursEdit, setHours] = useState<number | null>(null);
   const hours = hoursEdit ?? realHours;
@@ -203,6 +204,11 @@ export default function MapView() {
             </ul>
           </div>
         ))}
+      </section>
+
+      <section className="mt-10">
+        <SectionTitle>1:1 prep</SectionTitle>
+        <OneOnOnePrep course={learning.course} days={days} skills={skills} drills={drills ?? []} milestones={milestones} />
       </section>
     </main>
   );

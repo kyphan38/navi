@@ -8,9 +8,11 @@
 // ============================================================
 
 import { initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore, type DocumentReference } from 'firebase-admin/firestore';
 import { logger, setGlobalOptions } from 'firebase-functions';
 import { HttpsError, onCall } from 'firebase-functions/https';
+import { onSchedule } from 'firebase-functions/scheduler';
 import { defineSecret, defineString } from 'firebase-functions/params';
 
 import { isAllowed } from './access.ts';
@@ -49,7 +51,9 @@ import {
   type Profile,
   type Round,
 } from './drill/prompts.ts';
-import { generateText, type Thinking } from './gemini.ts';
+import { generateGrounded, generateText, type Thinking } from './gemini.ts';
+import { buildDigestPrompt, buildPostmortemPrompt, checkLink, fakeDigest, fakePostmortems, keepWorking, parseDigest, parsePostmortems, weekIdAt } from './news.ts';
+import { SENIOR_SCHEMA, buildSeniorPrompt, fakeSenior, findInternalData, parseSenior } from './senior.ts';
 import {
   CARDS_SCHEMA,
   QUIZ_SCHEMA,
@@ -519,4 +523,99 @@ export const explainBack = onCall(OPTS, async (req) => {
     });
   }
   return { grade };
+});
+
+// ------------------------------------------------------------------ outside info (P6)
+
+/** A grounded (web search) call parsed by `parse`, with one more try when the text is broken. */
+async function ground<T>(prompt: string, parse: (text: string) => T, fake: () => string): Promise<T> {
+  if (fakeAi()) return parse(fake());
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let text: string;
+    try {
+      text = await generateGrounded(GEMINI_API_KEY.value(), GEMINI_MODEL.value(), prompt);
+    } catch (err) {
+      throw modelError(err);
+    }
+    try {
+      return parse(text);
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  logger.error('grounded answer could not be parsed', lastErr instanceof Error ? lastErr.message : String(lastErr));
+  throw new HttpsError('unavailable', 'Model answer was broken');
+}
+
+/**
+ * This week's digest (up to 5 news items) and one public postmortem, every link
+ * opened first. Saved to digests/{week}; used by the Sunday job and the button.
+ */
+async function buildDigest(uid: string): Promise<string> {
+  const now = Date.now();
+  const id = weekIdAt(now);
+  const db = getFirestore();
+  const col = db.collection('users').doc(uid).collection('digests');
+  const [profile, recent] = await Promise.all([loadProfile(uid), col.orderBy('createdAt', 'desc').limit(8).get()]);
+  // Never the same postmortem twice in a row of 8 weeks.
+  const skip = recent.docs.map((d) => d.get('postmortem.title')).filter((t): t is string => typeof t === 'string');
+
+  const [items, pms] = await Promise.all([
+    ground(buildDigestPrompt(profile.context, now), parseDigest, fakeDigest),
+    ground(buildPostmortemPrompt(profile.context, skip), parsePostmortems, fakePostmortems),
+  ]);
+  const check = (url: string) => checkLink(url);
+  const news = await keepWorking(items, check);
+  let postmortem = null;
+  for (const p of pms) {
+    if (skip.includes(p.title)) continue;
+    const url = await check(p.url);
+    if (url) {
+      postmortem = { ...p, url };
+      break;
+    }
+  }
+  await col.doc(id).set({ items: news, postmortem, createdAt: now });
+  logger.info('digest saved', { week: id, items: news.length, postmortem: !!postmortem, candidates: items.length });
+  return id;
+}
+
+/** Sunday 06:00 Vietnam time: the digest for the one allowed user. */
+export const weeklyDigest = onSchedule(
+  { schedule: '0 6 * * 0', timeZone: 'Asia/Ho_Chi_Minh', secrets: [GEMINI_API_KEY], timeoutSeconds: 540, memory: '512MiB' },
+  async () => {
+    const user = await getAuth().getUserByEmail(ALLOWED_USER_EMAIL.value());
+    await buildDigest(user.uid);
+  },
+);
+
+/** The same digest on demand (the News page button). At most once an hour. */
+export const newsNow = onCall({ ...OPTS, timeoutSeconds: 540 }, async (req) => {
+  const uid = guard(req.auth);
+  const snap = await getFirestore().doc(`users/${uid}/digests/${weekIdAt(Date.now())}`).get();
+  const at = snap.get('createdAt');
+  if (typeof at === 'number' && Date.now() - at < 3_600_000) return { id: snap.id };
+  return { id: await buildDigest(uid) };
+});
+
+/** A real work problem -> how a senior would think about it. Refuses internal data. */
+export const askSenior = onCall(OPTS, async (req) => {
+  const uid = guard(req.auth);
+  const { question: raw } = (req.data ?? {}) as { question?: unknown };
+  const question = typeof raw === 'string' ? raw.normalize('NFC').trim() : '';
+  if (question.length < 10) throw new HttpsError('invalid-argument', 'Write a bit more about the problem');
+  if (question.length > 3000) throw new HttpsError('invalid-argument', 'Too long');
+  const found = findInternalData(question);
+  if (found.length) throw new HttpsError('invalid-argument', `Remove internal data first: ${found.join(', ')}.`);
+
+  const profile = await loadProfile(uid);
+  const answer = await ask(buildSeniorPrompt(question, profile.role, profile.years, profile.context), SENIOR_SCHEMA, parseSenior, fakeSenior, {
+    model: GEMINI_MODEL_FINISH.value(),
+    thinking: thinkingOf(GEMINI_THINKING_FINISH.value()),
+    temperature: 0.5,
+  });
+  const ref = getFirestore().collection('users').doc(uid).collection('asks').doc();
+  await ref.set({ question, answer, createdAt: Date.now() });
+  return { id: ref.id };
 });

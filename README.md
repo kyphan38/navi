@@ -34,7 +34,7 @@ be tested for free.
 
 ## Functions (AI)
 
-`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz`, `courseSplit`, `skillTag`, `explainBack` in `functions/src/index.ts`
+`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz`, `courseSplit`, `skillTag`, `explainBack`, `newsNow`, `weeklyDigest` (scheduled), `askSenior` in `functions/src/index.ts`
 (term cards and quizzes use Flash low).
 Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
 Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
@@ -86,6 +86,11 @@ Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THI
   after 3 easy drills in a row at 70%+, hard after 3 medium (`openLevels`, checked on the
   server too). Hard rounds show a 5 minute timer. Mistakes from drills and due terms share
   one review at `/review/` (Leitner, at most 5 a day, no AI call).
+- **Outside info (P6):** `news` shows a weekly digest (up to 5 items) and a public postmortem,
+  made by `weeklyDigest` every Sunday 06:00 (Vietnam) or the `get this week` button (`newsNow`).
+  The model searches the web; every link is opened before it is saved. `ask` sends a real work
+  problem to `askSenior`, which refuses internal data (IPs, ARNs, hosts, keys, emails). The Map
+  ends with a 1:1 prep: notes for a date range, ready to copy.
 - **Skills and Map (P4):** levels 1-4 come from evidence (`src/lib/skill-level.ts`): done
   modules and demos, medium+ drills at 70%+, "used at work" notes, and a passed
   "Explain it back". `skillTag` tags modules and drills with skills. The Map shows the

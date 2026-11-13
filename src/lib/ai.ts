@@ -40,3 +40,8 @@ export const tagSkills = (data: Record<string, never> = {}) =>
 export type Turn = { question: string; answer?: string };
 export type Grade = { pass: boolean; feedback: string; gaps: string[] };
 export const explainBack = call<{ skillId: string; turns: Turn[] }, { question?: string; grade?: Grade }>('explainBack');
+
+// The digest searches the web and opens every link: allow up to 9 minutes.
+export const newsNow = (data: Record<string, never> = {}) =>
+  httpsCallable<Record<string, never>, { id: string }>(getFunctionsClient(), 'newsNow', { timeout: 540_000 })(data).then((r) => r.data);
+export const askSenior = call<{ question: string }, { id: string }>('askSenior');

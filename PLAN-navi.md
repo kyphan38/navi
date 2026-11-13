@@ -549,12 +549,22 @@ Ghi chú khi làm:
   Ôn term và lỗi sai chung một trang `/review/`, tối đa 5 mục mỗi ngày.
 - Mức hard có đồng hồ 5 phút mỗi vòng (chỉ hiện số, hết giờ hiện `over`, không chặn).
 
-### P6 - Thông tin bên ngoài
+### P6 - Thông tin bên ngoài (xong 2026-11-13)
 `askSenior`, `postmortemPick`, `weeklyDigest` (tối đa 5 mục, chia `inside banking` / `outside`, mỗi mục 1 dòng
 "What it means for you", link đã kiểm). Trang 1:1 prep: gom bằng chứng mới, skill vừa lên mức, bài tập đã làm
 trong khoảng ngày chọn, thành bản tóm tắt copy được.
 **Done:** digest chạy trên emulator với lịch giả, không có link chết. Ask senior từ chối trả lời nếu input có vẻ chứa
 dữ liệu nội bộ (tên host, IP, ARN có account id) và nhắc bỏ đi.
+Ghi chú khi làm:
+- Nav thêm 2 chỗ: `ask` (hỏi senior) và `news` (digest + postmortem của tuần). 1:1 prep nằm cuối trang `map`.
+- Digest dùng Google Search grounding (Flash). Model hay đoán sai đường link (thử: 1/3 link bị 404), nên server
+  xin 8 ứng viên, mở từng link (2xx, không phải trang chủ), lưu link cuối cùng. Thử thật: 5/8 giữ lại, 6/6 link mở được, 106 giây.
+- `weeklyDigest` chạy 06:00 sáng Chủ nhật (giờ VN). Nút `get this week` trên trang news chạy cùng code (tối đa 1 lần/giờ).
+  Emulator bỏ qua lịch (không có pubsub emulator), nên `newsNow` là "lịch giả".
+- Postmortem không lặp lại trong 8 tuần gần nhất.
+- Ask senior chấm bằng Hydrogen (khoảng 20 giây). Chặn dữ liệu nội bộ ở cả trình duyệt và server: IP, ARN có account id,
+  số 12 chữ số, access key, host `.internal/.local/.corp`, `ip-10-...`, email.
+- 1:1 prep không gọi AI: chỉ lấy số liệu trong app (module, giờ học, skill lên mức, ghi chú work, drill, term, việc career).
 
 ---
 

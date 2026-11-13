@@ -31,3 +31,19 @@ export async function generateText(
   if (!text) throw new Error('Empty answer from model');
   return text;
 }
+
+/** One prompt with Google Search grounding. No JSON schema here: the caller parses the text. */
+export async function generateGrounded(apiKey: string, model: string, prompt: string, timeoutMs = 150_000): Promise<string> {
+  if (!client || clientKey !== apiKey) {
+    client = new GoogleGenAI({ apiKey });
+    clientKey = apiKey;
+  }
+  const res = await client.models.generateContent({
+    model,
+    contents: prompt,
+    config: { tools: [{ googleSearch: {} }], temperature: 0.3, httpOptions: { timeout: timeoutMs } },
+  });
+  const text = (res.text ?? '').trim();
+  if (!text) throw new Error('Empty answer from model');
+  return text;
+}

@@ -148,3 +148,26 @@ export type Milestone = {
   order: number;
   doneAt: number | null;
 };
+
+// --- Digests (users/{uid}/digests/{YYYY-Www}) - written by Functions ---
+export type NewsItem = { title: string; url: string; source: string; group: 'banking' | 'outside'; why: string };
+export type Digest = {
+  items: NewsItem[];
+  postmortem: { title: string; url: string; source: string; summary: string; questions: string[] } | null;
+  createdAt: number;
+};
+
+// --- Asks (users/{uid}/asks/{id}) - "Ask a senior", written by Functions ---
+export type Ask = {
+  question: string;
+  answer: {
+    restate: string;
+    questions: string[];
+    impact: string;
+    options: { name: string; pros: string; cons: string }[];
+    recommend: string;
+    tellWho: string;
+    firstSteps: string[];
+  };
+  createdAt: number;
+};
