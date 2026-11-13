@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { clockAt, scorePercent, splitProse, todayDrill } from '@/lib/drills';
+import { clockAt, scorePercent, splitProse, todayDrill, topicForDay } from '@/lib/drills';
 import type { Drill } from '@/types/navi';
 
 const base: Drill = {
@@ -65,4 +65,11 @@ test('splitProse keeps code blocks apart from paragraphs', () => {
     { code: true, text: 'resource "x" {}' },
     { code: false, text: 'What is wrong?' },
   ]);
+});
+
+test('topicForDay rotates through the week topics', () => {
+  assert.equal(topicForDay('2026-11-13', []), undefined);
+  const a = topicForDay('2026-11-13', ['x', 'y']);
+  const b = topicForDay('2026-11-14', ['x', 'y']);
+  assert.ok(a && b && a !== b);
 });

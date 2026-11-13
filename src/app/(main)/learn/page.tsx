@@ -1,5 +1,5 @@
-import EmptyPage from '@/components/EmptyPage';
+import LearnView from '@/components/LearnView';
 
 export default function LearnPage() {
-  return <EmptyPage title="learn" />;
+  return <LearnView />;
 }

@@ -510,11 +510,17 @@ Ghi chú khi làm: `drillFinish` tự tạo thẻ term (tên, area, nghĩa 1 dò
 Drill cũ (trước P2) hiện dòng `N from drills · add`. Quiz là trắc nghiệm, chấm ngay trên máy (không gọi AI lần 2);
 đúng 2/3 trở lên = một lần ôn đúng. Ôn hằng ngày không gọi AI: xem tên, nhớ lại, `show`, rồi `knew it` / `not yet`.
 
-### P3 - Học theo khóa học
+### P3 - Học theo khóa học (xong 2026-11-13)
 `learn`: add course (dán mục lục) -> `courseSplit` -> sửa -> save. Today theo module. Weekly review + `plan.ts`.
 Báo trễ deadline. Bài tập hôm nay lấy chủ đề từ module tuần này.
 **Done:** dán mục lục mẫu (khoảng 150 bài) -> chia đúng tuần. Unit test `plan.ts`: tuần thiếu giờ, tuần không học,
 khóa xong sớm, deadline đã qua.
+Ghi chú khi làm (khác plan):
+- `weekPlan` không gọi AI: chủ đề drill = tên các bài lesson/demo của tuần (code thuần). `doneWhen` do `courseSplit` viết sẵn.
+- `courseSplit` chưa gắn skill và chưa tách term (để P4, khi có skills).
+- Mục lục mẫu 138 bài (6 KB): Flash đọc đúng hết (demo, quiz, exam, thời lượng `11:37` -> 13 phút), mất khoảng 50 giây.
+- Một khóa học đang chạy tại một thời điểm (`Để sau`: nhiều khóa).
+- Tick nhanh liên tiếp: ngày dùng increment/arrayUnion, khóa học giữ các tick chưa về snapshot (`useTick`).
 
 ### P4 - Kỹ năng + Map
 `skill-level.ts`, gắn bằng chứng tự động (module, demo, drill), nút `used at work` để thêm bằng chứng mức 3,

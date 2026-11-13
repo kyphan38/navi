@@ -14,6 +14,7 @@ import { HttpsError, onCall } from 'firebase-functions/https';
 import { defineSecret, defineString } from 'firebase-functions/params';
 
 import { isAllowed } from './access.ts';
+import { MAX_TOC, SPLIT_SCHEMA, buildSplitPrompt, chunkToc, fakeSplit, parseSplit, type SplitModule } from './course.ts';
 import { DRILLS, ROUNDS, isDrillType, type DrillLevel, type DrillType } from './drill/catalog.ts';
 import { fakeAnswer, fakeFinish, fakeStart } from './drill/fake.ts';
 import {
@@ -370,4 +371,32 @@ export const termQuiz = onCall(OPTS, async (req) => {
     temperature: 0.7,
   });
   return { questions };
+});
+
+// ------------------------------------------------------------------ course (P3)
+
+/**
+ * Pasted table of contents -> modules (not saved: the learner checks them first).
+ * Long courses are split into parts that run 3 at a time.
+ */
+export const courseSplit = onCall({ ...OPTS, timeoutSeconds: 300 }, async (req) => {
+  guard(req.auth);
+  const { text } = (req.data ?? {}) as { text?: unknown };
+  if (typeof text !== 'string' || !text.trim()) throw new HttpsError('invalid-argument', 'Paste the course contents first');
+  if (text.length > MAX_TOC) throw new HttpsError('invalid-argument', 'Too long');
+  const parts = chunkToc(text.normalize('NFC'));
+  const out: SplitModule[][] = new Array(parts.length);
+  for (let i = 0; i < parts.length; i += 3) {
+    await Promise.all(
+      parts.slice(i, i + 3).map(async (part, j) => {
+        out[i + j] = await ask(buildSplitPrompt(part, i + j + 1, parts.length), SPLIT_SCHEMA, parseSplit, () => fakeSplit(part), {
+          thinking: 'default',
+          temperature: 0.2,
+        });
+      }),
+    );
+  }
+  const modules = out.flat().slice(0, 600);
+  if (!modules.length) throw new HttpsError('invalid-argument', 'No lessons found');
+  return { modules };
 });

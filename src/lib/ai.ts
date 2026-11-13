@@ -28,3 +28,8 @@ export function aiError(err: unknown): string {
   if (code.endsWith('deadline-exceeded')) return 'AI took too long. Try again.';
   return 'AI is not reachable. Try again.';
 }
+
+export type SplitModule = { section: string; title: string; minutes: number; kind: 'lesson' | 'demo' | 'quiz' | 'exam'; doneWhen: string };
+// A long course runs in parts on the server; allow up to 5 minutes.
+export const splitCourse = (data: { text: string }) =>
+  httpsCallable<{ text: string }, { modules: SplitModule[] }>(getFunctionsClient(), 'courseSplit', { timeout: 300_000 })(data).then((r) => r.data);

@@ -80,3 +80,8 @@ export function splitProse(text: string): { code: boolean; text: string }[] {
   });
   return out;
 }
+
+/** Today's drill topic from this week's course modules, rotating by day; undefined = random. */
+export function topicForDay(day: string, topics: string[]): string | undefined {
+  return topics.length ? topics[dayNumber(day) % topics.length] : undefined;
+}

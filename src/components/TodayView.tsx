@@ -4,14 +4,19 @@ import Link from 'next/link';
 import { useSyncExternalStore, type ReactNode } from 'react';
 
 import PageHead from '@/components/PageHead';
+import DayNote from '@/components/DayNote';
+import ModuleRow from '@/components/ModuleRow';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
+import { useLearning } from '@/hooks/useLearning';
 import { useNow } from '@/hooks/useNow';
 import { useTerms } from '@/hooks/useTerms';
 import { useStartDrill } from '@/hooks/useStartDrill';
+import { useTick } from '@/hooks/useTick';
 import { dayOf, parseDay } from '@/lib/day';
-import { scorePercent, todayDrill, typeLabel } from '@/lib/drills';
+import { scorePercent, todayDrill, topicForDay, typeLabel } from '@/lib/drills';
 import { dueItems } from '@/lib/leitner';
+import { todayModules } from '@/lib/plan';
 
 const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const noop = () => () => {};
@@ -20,7 +25,8 @@ const noop = () => () => {};
 function Stop({ done, label, children }: { done: boolean; label: string; children: ReactNode }) {
   return (
     <li className="relative py-2.5 pl-6">
-      <span className="route-dot" data-on={done} aria-hidden />
+      {/* On the first line, not the middle, when a stop has several rows. */}
+      <span className="route-dot" data-on={done} style={{ top: '21px' }} aria-hidden />
       <span className="mr-3 font-mono text-[12px] text-faint">{label}</span>
       {children}
     </li>
@@ -38,6 +44,13 @@ export default function TodayView() {
   // Review shows once anything is in review; done = nothing due right now.
   const inReview = (terms ?? []).some((t) => t.status === 'learning');
   const due = terms && now ? dueItems(terms, now).length : 0;
+  const learning = useLearning();
+  const { course, week, todayDoc } = learning;
+  const tick = useTick(course, day, todayDoc);
+  const planned = course && week ? course.modules.filter((m) => week.plan.moduleIds.includes(m.id)) : [];
+  const mods = day ? todayModules(planned, day, new Set(todayDoc?.moduleIds ?? [])) : [];
+  const learnDone = mods.length > 0 && mods.every((m) => m.doneAt !== null);
+  const topic = day && week ? topicForDay(day, week.plan.drillTopics) : undefined;
 
   return (
     <main className="column">
@@ -45,16 +58,39 @@ export default function TodayView() {
 
       {pick && (
         <ul className="route mt-8 text-[15px]">
+          {learning.ready && course && !week && (
+            <Stop done={false} label="learn">
+              <Link href="/learn/" className="group inline-flex items-baseline gap-3">
+                <span className="text-ink">plan this week</span>
+                <span className="text-faint transition-colors group-hover:text-ink">open</span>
+              </Link>
+            </Stop>
+          )}
+          {week && course && (
+            <Stop done={learnDone || (planned.length > 0 && mods.length === 0)} label="learn">
+              {mods.length === 0 ? (
+                <span className="text-muted">{planned.length ? 'week done' : 'nothing planned'}</span>
+              ) : (
+                <div className="-mt-0.5">
+                  {mods.map((m) => (
+                    <ModuleRow key={m.id} m={m} onToggle={(d) => tick(m, d)} showDoneWhen />
+                  ))}
+                  {todayDoc && todayDoc.moduleIds.length > 0 && <DayNote day={day} doc={todayDoc} />}
+                </div>
+              )}
+            </Stop>
+          )}
           <Stop done={pick.state === 'done'} label="drill">
             {pick.state === 'todo' && (
               <span className="inline-flex flex-wrap items-baseline gap-x-3">
                 <span className="text-ink">
                   {typeLabel(pick.type)} <span className="font-mono text-[12px] text-faint">{pick.level}</span>
                 </span>
+                {topic && <span className="min-w-0 text-[14px] text-faint">{topic}</span>}
                 {busy ? (
                   <Waiting />
                 ) : (
-                  <button type="button" onClick={() => void start(pick.type, pick.level)} className="text-faint transition-colors hover:text-ink">
+                  <button type="button" onClick={() => void start(pick.type, pick.level, topic)} className="text-faint transition-colors hover:text-ink">
                     start
                   </button>
                 )}

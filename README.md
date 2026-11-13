@@ -34,7 +34,7 @@ be tested for free.
 
 ## Functions (AI)
 
-`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz` in `functions/src/index.ts`
+`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz`, `courseSplit` in `functions/src/index.ts`
 (term cards and quizzes use Flash low).
 Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
 Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
@@ -77,6 +77,11 @@ Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THI
   id = lowercase name with `-`). `termCard` adds terms by hand, `termQuiz` makes
   3 questions. Review uses Leitner boxes (1, 3, 7, 14, 30 days, `src/lib/leitner.ts`);
   right in box 5 = known. Today shows the review when something is due.
+- **Course plan (P3):** paste a course's contents once; `courseSplit` (Flash low, parts of
+  10 KB run 3 at a time) turns it into modules with minutes and a "done when". Each week,
+  `src/lib/plan.ts` takes about 70% of the real weekly average (last 4 planned weeks,
+  profile hours until there are 2) and picks the next modules. Today spreads them over
+  the days left. Being late moves the finish date; old work never piles onto next week.
 - **Writes are never awaited** (`src/lib/repo.ts`): offline, a write goes to the
   cache at once and syncs later.
 - **Nav:** a left rail on wide screens, a scrolling row of words on phones
