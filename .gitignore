@@ -76,3 +76,4 @@ gemini_api_key.txt
 
 # A/B output (scripts/ab-finish.mjs)
 ab-finish.md
+web_app.config
