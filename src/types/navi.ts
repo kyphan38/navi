@@ -41,30 +41,37 @@ export type AnswerKind = 'choice' | 'text' | 'order' | 'command' | 'message';
 export type Round = {
   prompt: string;
   kind: AnswerKind;
-  options?: string[];
+  options: string[];           // choice: pick one; order: rank all; else []
+  hint: string;                // easy level only, else ''
   answer?: string;
-  reveal?: string;
+  reveal?: string;             // what happened after the answer (not on the last round)
 };
-export type Score = { triage: 0|1|2|3; hypothesis: 0|1|2|3; safety: 0|1|2|3; comms: 0|1|2|3; prevention: 0|1|2|3 };
+export type Criterion = 'triage' | 'hypothesis' | 'safety' | 'comms' | 'prevention';
+/** 0-3 per criterion; null = not used by this drill type. */
+export type Score = Record<Criterion, number | null>;
 
 export type Drill = {
   group: DrillGroup; type: DrillType; level: DrillLevel;
   topic: string;               // "IAM", "DB connection pool"...
   skillIds: string[];
+  clock: string;               // fake start time "02:04" for the incident-log look
   brief: string;
-  rounds: Round[];             // 3-6
+  rounds: Round[];             // 3-5
   status: 'active' | 'done' | 'dropped';
   score: Score | null;
   debrief: string | null;
-  whatIf: string[];
+  seniorPath: string | null;
+  whatIf: { question: string; answer: string }[];
   newTerms: string[];
   startedAt: number; doneAt: number | null;
 };
 
+// users/{uid}/drillKeys/{drillId} - hidden answer. Rules: the client can never read it.
 export type DrillKey = {
   truth: string;
   seniorPath: string;
   rubric: string;
+  outline: string[];           // one line per round
 };
 
 // --- Mistakes (users/{uid}/mistakes/{id}) ---

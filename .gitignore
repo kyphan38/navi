@@ -73,3 +73,6 @@ project-setting.json
 # local key files
 gemini_api_key.txt
 *api_key*.txt
+
+# A/B output (scripts/ab-finish.mjs)
+ab-finish.md

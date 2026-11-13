@@ -1,5 +1,5 @@
-import EmptyPage from '@/components/EmptyPage';
+import DrillHome from '@/components/DrillHome';
 
 export default function DrillPage() {
-  return <EmptyPage title="drill" />;
+  return <DrillHome />;
 }

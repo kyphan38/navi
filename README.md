@@ -24,8 +24,24 @@ PATH=/opt/homebrew/opt/openjdk@21/bin:$PATH npm run emu
 npm run dev:emu
 ```
 
-Checks: `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`,
-and `npm run test:rules` while the emulator runs.
+Checks: `npm run lint`, `npm run typecheck`, `npm run fn:typecheck`, `npm test`,
+`npm run build`, and `npm run test:rules` while the emulator runs.
+
+The emulator uses its own ports (auth 9110, firestore 8110, functions 5110), so it
+runs next to the other apps. With no `GEMINI_API_KEY` in `.env.local`, the functions
+answer drills with canned data (`functions/src/drill/fake.ts`), so the whole flow can
+be tested for free.
+
+## Functions (AI)
+
+`drillStart`, `drillAnswer`, `drillFinish` in `functions/src/index.ts`.
+Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
+Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
+
+Model: `gemini-3.8-flash`, thinking low. To compare setups for scoring, the owner runs
+`npm --prefix functions run build && GEMINI_API_KEY=... node scripts/ab-finish.mjs`
+and reads `ab-finish.md`. Change `GEMINI_MODEL_FINISH` / `GEMINI_THINKING_FINISH`
+in `functions/.env` only if one is clearly better.
 
 ## Stage 0 (owner, on the consoles)
 
@@ -44,7 +60,12 @@ and `npm run test:rules` while the emulator runs.
 
 - **Data:** everything under `users/{uid}/` (see `src/types/navi.ts` and
   `firestore.rules.template`). `drillKeys` hold hidden drill answers and are
-  never readable from the client.
+  never readable from the client. Only Functions create drills; the client may
+  only mark one `dropped`.
+- **Drills:** the server writes the hidden story first (`drillKeys`), then each
+  round reacts to the answer but stays true to it. Easy = 3 rounds, medium = 4.
+  Mistakes go to `mistakes` (review comes in P5). Terms stay in `drill.newTerms`
+  until the Terms tab (P2).
 - **Writes are never awaited** (`src/lib/repo.ts`): offline, a write goes to the
   cache at once and syncs later.
 - **Nav:** a left rail on wide screens, a scrolling row of words on phones

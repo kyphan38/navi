@@ -61,8 +61,8 @@ service cloud.firestore {
     }
 
     function validDrill(d) {
-      return d.keys().hasOnly(['group','type','level','topic','skillIds','brief','rounds','status',
-          'score','debrief','whatIf','newTerms','startedAt','doneAt'])
+      return d.keys().hasOnly(['group','type','level','topic','skillIds','clock','brief','rounds','status',
+          'score','debrief','seniorPath','whatIf','newTerms','startedAt','doneAt'])
         && d.group in ['tech','ai','comms','business','writing']
         && str(d.type, 40)
         && d.level in ['easy','medium','hard']
@@ -73,6 +73,7 @@ service cloud.firestore {
         && d.status in ['active','done','dropped']
         && (d.score == null || d.score is map)
         && optStr(d.debrief, 12000)
+        && optStr(d.seniorPath, 8000)
         && d.whatIf is list && d.whatIf.size() <= 4
         && d.newTerms is list && d.newTerms.size() <= 20
         && d.startedAt is int && optInt(d.doneAt);

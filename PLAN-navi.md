@@ -152,22 +152,25 @@ export type AnswerKind = 'choice' | 'text' | 'order' | 'command' | 'message';
 export type Round = {
   prompt: string;              // câu hỏi + thông tin mới
   kind: AnswerKind;
-  options?: string[];          // cho 'choice' và 'order'. 'choice' luôn có thêm "Other" (tự viết)
+  options: string[];           // cho 'choice' và 'order', còn lại []. 'choice' luôn có thêm "other" (tự viết)
+  hint: string;                // chỉ mức easy, còn lại ''
   answer?: string;             // câu trả lời của người dùng
   reveal?: string;             // AI đưa thêm thông tin sau câu trả lời
 };
-export type Score = { triage: 0|1|2|3; hypothesis: 0|1|2|3; safety: 0|1|2|3; comms: 0|1|2|3; prevention: 0|1|2|3 };
+export type Score = Record<'triage' | 'hypothesis' | 'safety' | 'comms' | 'prevention', number | null>; // 0-3, null = không dùng
 
 export type Drill = {
   group: DrillGroup; type: DrillType; level: DrillLevel;
   topic: string;               // "IAM", "DB connection pool"...
   skillIds: string[];
+  clock: string;               // giờ giả lúc bắt đầu, "02:04" (giao diện nhật ký sự cố)
   brief: string;               // đề bài
   rounds: Round[];             // 3-6
   status: 'active' | 'done' | 'dropped';
   score: Score | null;         // tiêu chí không áp dụng thì ẩn (ví dụ 'say-no' không có 'hypothesis')
-  debrief: string | null;      // nhận xét + con đường của senior
-  whatIf: string[];            // 1-2 câu "What if...?" kèm câu trả lời ngắn
+  debrief: string | null;      // nhận xét
+  seniorPath: string | null;   // con đường của senior (cột phải của debrief)
+  whatIf: { question: string; answer: string }[]; // 1-2 câu "What if...?" kèm câu trả lời ngắn
   newTerms: string[];          // term xuất hiện trong bài, đưa vào tab Terms
   startedAt: number; doneAt: number | null;
 };
@@ -177,6 +180,7 @@ export type DrillKey = {
   truth: string;               // nguyên nhân thật + diễn biến định sẵn
   seniorPath: string;          // các bước một senior sẽ làm
   rubric: string;              // điểm cần có cho từng tiêu chí
+  outline: string[];           // mỗi vòng một dòng: hỏi gì, kiểu trả lời nào
 };
 
 // --- Mistakes (users/{uid}/mistakes/{id}) ---
@@ -486,13 +490,13 @@ Today hiện tối đa 5 mục ôn mỗi ngày. `src/lib/leitner.ts` có unit te
 Mỗi phase: code + unit test + kiểm trên emulator + Playwright ở 360/390/430px (không tràn, không đè).
 Xong phase thì commit, hỏi chủ app trước khi làm phase tiếp.
 
-### P0 - Khung
+### P0 - Khung (xong 2026-11-13)
 Copy khung legi/hodi (danh sách mục 0). Login, AuthGate, TopBar với nav ở mục 2, Settings (Profile + Theme + giờ/tuần),
 service worker, icon (tile `#f4f4f1` + mark `#141414`). Các trang khác là trang trống có tiêu đề.
 Rules cho mọi collection ở mục 3. README có Stage 0.
 **Done:** đăng nhập được trên emulator, đổi theme được, rules test chặn email lạ và chặn đọc `drillKeys`.
 
-### P1 - Bài tập lõi
+### P1 - Bài tập lõi (xong 2026-11-13, chưa A/B model)
 `drillStart` / `drillAnswer` / `drillFinish`. Loại `incident` + `security-review`, mức easy + medium.
 Trang `drill`: chọn loại -> chọn mức -> làm bài -> debrief. Lịch sử bài đã làm. Today hiện "bài tập hôm nay".
 Lưu `mistakes` và `newTerms` (term chỉ lưu tên, P2 mới có UI). A/B model theo 5.3.
