@@ -40,6 +40,13 @@ if (!email) {
 const lines = [`ALLOWED_USER_EMAIL=${email}`];
 // Always written: non-interactive deploy fails on a param with no value, even with a default.
 lines.push(`GEMINI_MODEL=${(env.GEMINI_MODEL ?? '').trim() || 'gemini-3.8-flash'}`);
+// Writing and scoring a drill use a stronger model (A/B 2026-11-13, see README).
+// 'none' = send no thinking level.
+const pick = (name, fallback) => lines.push(`${name}=${(env[name] ?? '').trim() || fallback}`);
+pick('GEMINI_MODEL_START', 'gemini-4-hydrogen');
+pick('GEMINI_THINKING_START', 'none');
+pick('GEMINI_MODEL_FINISH', 'gemini-4-hydrogen');
+pick('GEMINI_THINKING_FINISH', 'none');
 writeFileSync('functions/.env', lines.join('\n') + '\n');
 console.log('functions/.env written');
 

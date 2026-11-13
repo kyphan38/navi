@@ -496,7 +496,7 @@ service worker, icon (tile `#f4f4f1` + mark `#141414`). Các trang khác là tra
 Rules cho mọi collection ở mục 3. README có Stage 0.
 **Done:** đăng nhập được trên emulator, đổi theme được, rules test chặn email lạ và chặn đọc `drillKeys`.
 
-### P1 - Bài tập lõi (xong 2026-11-13, chưa A/B model)
+### P1 - Bài tập lõi (xong 2026-11-13, A/B xong: Hydrogen viết + chấm, Flash cho từng vòng)
 `drillStart` / `drillAnswer` / `drillFinish`. Loại `incident` + `security-review`, mức easy + medium.
 Trang `drill`: chọn loại -> chọn mức -> làm bài -> debrief. Lịch sử bài đã làm. Today hiện "bài tập hôm nay".
 Lưu `mistakes` và `newTerms` (term chỉ lưu tên, P2 mới có UI). A/B model theo 5.3.

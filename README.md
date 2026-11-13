@@ -38,10 +38,17 @@ be tested for free.
 Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
 Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
 
-Model: `gemini-3.8-flash`, thinking low. To compare setups for scoring, the owner runs
-`npm --prefix functions run build && GEMINI_API_KEY=... node scripts/ab-finish.mjs`
-and reads `ab-finish.md`. Change `GEMINI_MODEL_FINISH` / `GEMINI_THINKING_FINISH`
-in `functions/.env` only if one is clearly better.
+Models (A/B of 2026-11-13, `scripts/ab-finish.mjs`, Flash low vs Argon vs Hydrogen):
+
+| Step | Model | Why |
+|---|---|---|
+| `drillStart` (write the drill) | `gemini-4-hydrogen` | Most real scenarios: people pressure, a wrong lead, payment safety in the hidden story. 13-50 s, once per drill |
+| `drillAnswer` (each round) | `gemini-3.8-flash` low | ~3 s; the learner waits every round, and the hidden story from Hydrogen keeps it on track |
+| `drillFinish` (score) | `gemini-4-hydrogen` | Most specific feedback and fair partial scores. 12-18 s, once per drill |
+
+Argon was close on both (kinder tone, 11-28 s). Hydrogen's price was not public on 2026-11-13.
+Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THINKING_*`,
+`none` = no thinking level) in `.env.local`, then `npm run fn:env` and deploy functions.
 
 ## Stage 0 (owner, on the consoles)
 

@@ -5,7 +5,8 @@ import { httpsCallable } from 'firebase/functions';
 import { getFunctionsClient } from '@/lib/firebase-client';
 import type { DrillLevel, DrillType } from '@/types/navi';
 
-const TIMEOUT = 100_000;
+// Above the functions' 180 s limit is pointless; a strong model can take ~50 s.
+const TIMEOUT = 175_000;
 
 function call<In, Out>(name: string) {
   return (data: In) => httpsCallable<In, Out>(getFunctionsClient(), name, { timeout: TIMEOUT })(data).then((r) => r.data);

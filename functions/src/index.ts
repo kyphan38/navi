@@ -38,13 +38,23 @@ initializeApp();
 
 const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 const ALLOWED_USER_EMAIL = defineString('ALLOWED_USER_EMAIL');
-// Flash low by default (ws/app rule); move up only after the A/B in scripts/ab-finish.mjs.
+// Model per step, chosen by the A/B of 2026-11-13 (scripts/ab-finish.mjs, README):
+// writing the drill and scoring it use a strong model (once each, quality matters);
+// the rounds use Flash low, because the learner waits on every round.
+// GEMINI_THINKING_* = 'none' sends no thinking level (models without levels).
 const GEMINI_MODEL = defineString('GEMINI_MODEL', { default: 'gemini-3.8-flash' });
-const GEMINI_MODEL_FINISH = defineString('GEMINI_MODEL_FINISH', { default: '' });
-const GEMINI_THINKING_FINISH = defineString('GEMINI_THINKING_FINISH', { default: 'low' });
+const GEMINI_MODEL_START = defineString('GEMINI_MODEL_START', { default: 'gemini-4-hydrogen' });
+const GEMINI_THINKING_START = defineString('GEMINI_THINKING_START', { default: 'none' });
+const GEMINI_MODEL_FINISH = defineString('GEMINI_MODEL_FINISH', { default: 'gemini-4-hydrogen' });
+const GEMINI_THINKING_FINISH = defineString('GEMINI_THINKING_FINISH', { default: 'none' });
+
+function thinkingOf(v: string): Thinking | undefined {
+  return v === 'low' || v === 'medium' || v === 'high' ? v : undefined;
+}
 
 const DAY = 86_400_000;
-const OPTS = { secrets: [GEMINI_API_KEY], timeoutSeconds: 90, memory: '512MiB' as const };
+// A strong model once took 51 s to write a drill; leave room for one retry.
+const OPTS = { secrets: [GEMINI_API_KEY], timeoutSeconds: 180, memory: '512MiB' as const };
 
 const fakeAi = () => process.env.FUNCTIONS_EMULATOR === 'true' && process.env.NAVI_FAKE_AI === '1';
 
@@ -68,7 +78,7 @@ async function ask<T>(
   schema: unknown,
   parse: (text: string) => T,
   fake: () => string,
-  opts: { model?: string; thinking?: Thinking; temperature?: number } = {},
+  opts: { model?: string; thinking?: Thinking | 'default'; temperature?: number } = {},
 ): Promise<T> {
   if (fakeAi()) return parse(fake());
   let lastErr: unknown;
@@ -77,9 +87,9 @@ async function ask<T>(
     try {
       text = await generateText(GEMINI_API_KEY.value(), opts.model || GEMINI_MODEL.value(), prompt, {
         jsonSchema: schema,
-        thinking: opts.thinking ?? 'low',
+        thinking: opts.thinking === 'default' ? 'low' : opts.thinking,
         temperature: opts.temperature ?? 0.7,
-        timeoutMs: 80_000,
+        timeoutMs: 85_000,
       });
     } catch (err) {
       throw modelError(err);
@@ -155,7 +165,11 @@ export const drillStart = onCall(OPTS, async (req) => {
       : spec.topics[Math.floor(Math.random() * spec.topics.length)];
 
   const profile = await loadProfile(uid);
-  const res = await ask(buildStartPrompt(profile, type, lvl, topic), START_SCHEMA, parseStart, () => fakeStart(type, lvl), { temperature: 0.9 });
+  const res = await ask(buildStartPrompt(profile, type, lvl, topic), START_SCHEMA, parseStart, () => fakeStart(type, lvl), {
+    model: GEMINI_MODEL_START.value(),
+    thinking: thinkingOf(GEMINI_THINKING_START.value()),
+    temperature: 0.9,
+  });
 
   const db = getFirestore();
   const user = db.collection('users').doc(uid);
@@ -219,6 +233,7 @@ export const drillAnswer = onCall(OPTS, async (req) => {
     ANSWER_SCHEMA,
     parseAnswer,
     () => fakeAnswer(rounds.length, drill.level),
+    { thinking: 'default' },
   );
   rounds[rounds.length - 1] = { ...rounds[rounds.length - 1], reveal: res.reveal };
   rounds.push(res.round);
@@ -240,7 +255,7 @@ export const drillFinish = onCall(OPTS, async (req) => {
     FINISH_SCHEMA,
     (t) => parseFinish(t, drill.type),
     fakeFinish,
-    { model: GEMINI_MODEL_FINISH.value(), thinking: GEMINI_THINKING_FINISH.value() as Thinking, temperature: 0.4 },
+    { model: GEMINI_MODEL_FINISH.value(), thinking: thinkingOf(GEMINI_THINKING_FINISH.value()), temperature: 0.4 },
   );
 
   const now = Date.now();
