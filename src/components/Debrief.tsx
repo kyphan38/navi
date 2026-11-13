@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 
 import { useUid } from '@/components/AuthGate';
@@ -9,6 +10,7 @@ import Waiting from '@/components/Waiting';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { CRITERIA, scorePercent } from '@/lib/drills';
 import { watchMistakesFor, type DrillDoc } from '@/lib/repo';
+import { termId } from '@/lib/terms';
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">{children}</h2>;
@@ -109,7 +111,16 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
       {drill.newTerms.length > 0 && (
         <section>
           <SectionTitle>terms</SectionTitle>
-          <p className="font-mono text-[13px] text-muted">{drill.newTerms.join(' · ')}</p>
+          <p className="font-mono text-[13px] text-muted">
+            {drill.newTerms.map((t, i) => (
+              <span key={t}>
+                {i > 0 && ' · '}
+                <Link href={`/terms/?open=${termId(t)}`} className="hover:text-ink">
+                  {t}
+                </Link>
+              </span>
+            ))}
+          </p>
         </section>
       )}
 

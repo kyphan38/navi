@@ -2,6 +2,7 @@
 // Pure file (no Firebase): the root test suite imports it.
 
 import { PLAIN_ENGLISH, SAFE_DATA } from '../style.ts';
+import { TERM_CARD_RULES, TERM_ITEM_SCHEMA, parseCard, termId, type TermCard } from '../terms.ts';
 import { CRITERIA, DRILLS, ROUNDS, kindRule, type AnswerKind, type Criterion, type DrillLevel, type DrillType } from './catalog.ts';
 
 export type Profile = { role: string; years: number; context: string; focus: string };
@@ -20,7 +21,7 @@ export type FinishResult = {
   seniorPath: string;
   whatIf: { question: string; answer: string }[];
   mistakes: { text: string; lesson: string }[];
-  newTerms: string[];
+  newTerms: TermCard[];
 };
 
 const KINDS: readonly AnswerKind[] = ['choice', 'text', 'order', 'command', 'message'];
@@ -76,7 +77,7 @@ export const FINISH_SCHEMA = {
       type: 'array',
       items: { type: 'object', properties: { text: { type: 'string' }, lesson: { type: 'string' } }, required: ['text', 'lesson'] },
     },
-    newTerms: { type: 'array', items: { type: 'string' } },
+    newTerms: { type: 'array', items: TERM_ITEM_SCHEMA },
   },
   required: ['scores', 'debrief', 'seniorPath', 'whatIf', 'mistakes', 'newTerms'],
 };
@@ -181,7 +182,8 @@ Return JSON:
 - "seniorPath": the senior steps as a numbered list, one line each, with a short reason.
 - "whatIf": 2 items. A "What if...?" twist on this drill and a short answer (2-3 sentences).
 - "mistakes": 0-3 items. Each: "text" = what the learner did wrong (1 sentence), "lesson" = what to do instead (1 sentence).
-- "newTerms": 2-6 technical terms from this drill that are worth learning (just the term, like "connection pool").`;
+- "newTerms": 2-6 technical terms from this drill that are worth learning. Each item:
+  ${TERM_CARD_RULES.split('\n').join('\n  ')}`;
 }
 
 // ------------------------------------------------------------------ parsers
@@ -233,6 +235,19 @@ export function parseAnswer(text: string): AnswerResult {
   return { reveal: need(str(d.reveal, 2000), 'reveal'), round: parseRound(d.round) };
 }
 
+/** Cards with a usable name, one per term id. Plain strings (old answers) become cards without a meaning. */
+function uniqueCards(raw: unknown[]): TermCard[] {
+  const seen = new Set<string>();
+  const out: TermCard[] = [];
+  for (const r of raw) {
+    const card = typeof r === 'string' ? parseCard({ name: r, area: 'Other', oneLine: '-' }) : parseCard(r);
+    if (!card || seen.has(termId(card.name))) continue;
+    seen.add(termId(card.name));
+    out.push(card);
+  }
+  return out;
+}
+
 /** "1. a 2. b 3. c" on one line -> one step per line. */
 export function stepsOnLines(text: string): string {
   if (text.includes('\n')) return text;
@@ -258,7 +273,7 @@ export function parseFinish(text: string, type: DrillType): FinishResult {
     seniorPath: stepsOnLines(str(d.seniorPath, 4000)),
     whatIf: pairs(d.whatIf, (o) => (str(o.question, 400) ? { question: str(o.question, 400), answer: str(o.answer, 1000) } : null), 3),
     mistakes: pairs(d.mistakes, (o) => (str(o.text, 1000) ? { text: str(o.text, 1000), lesson: str(o.lesson, 1000) } : null), 3),
-    newTerms: [...new Set((Array.isArray(d.newTerms) ? d.newTerms : []).map((t) => str(t, 120)).filter(Boolean))].slice(0, 8),
+    newTerms: uniqueCards(Array.isArray(d.newTerms) ? d.newTerms : []).slice(0, 8),
   };
 }
 

@@ -503,9 +503,12 @@ Lưu `mistakes` và `newTerms` (term chỉ lưu tên, P2 mới có UI). A/B mode
 **Done:** làm trọn 1 bài mỗi loại mỗi mức trên emulator. Đáp án ẩn không đọc được từ client.
 Câu chuyện khớp nhau qua các vòng (kiểm tay 5 bài, ghi kết quả vào README).
 
-### P2 - Terms
+### P2 - Terms (xong 2026-11-13)
 Tab `terms`, `termCard`, `termQuiz`, `copy prompt`, Leitner cho term, mục ôn trên Today.
 **Done:** term từ drill P1 hiện đúng, copy prompt ra đúng text mục 8, quiz chấm được.
+Ghi chú khi làm: `drillFinish` tự tạo thẻ term (tên, area, nghĩa 1 dòng) nên không cần gọi `termCard` thêm.
+Drill cũ (trước P2) hiện dòng `N from drills · add`. Quiz là trắc nghiệm, chấm ngay trên máy (không gọi AI lần 2);
+đúng 2/3 trở lên = một lần ôn đúng. Ôn hằng ngày không gọi AI: xem tên, nhớ lại, `show`, rồi `knew it` / `not yet`.
 
 ### P3 - Học theo khóa học
 `learn`: add course (dán mục lục) -> `courseSplit` -> sửa -> save. Today theo module. Weekly review + `plan.ts`.

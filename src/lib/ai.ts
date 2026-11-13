@@ -14,6 +14,9 @@ function call<In, Out>(name: string) {
 
 export const startDrill = call<{ type: DrillType; level: DrillLevel; topic?: string }, { id: string }>('drillStart');
 export const answerDrill = call<{ drillId: string; answer: string }, { done: boolean }>('drillAnswer');
+export const addTerms = call<{ names: string[]; source?: 'drill' | 'manual'; sourceId?: string }, { ids: string[] }>('termCard');
+export type QuizQuestion = { question: string; options: string[]; answer: number; why: string };
+export const quizTerm = call<{ termId: string }, { questions: QuizQuestion[] }>('termQuiz');
 export const finishDrill = call<{ drillId: string }, { ok: boolean }>('drillFinish');
 
 /** A short message for the screen. */

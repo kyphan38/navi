@@ -5,11 +5,11 @@
 // settles when the network is back. Fire and forget, read state from snapshots.
 // ============================================================
 
-import { collection, doc, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 import { getDb } from '@/lib/firebase-client';
 import { normalizeProfile } from '@/lib/profile';
-import type { Drill, Profile } from '@/types/navi';
+import type { Drill, Profile, Term } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -62,4 +62,27 @@ export function watchMistakesFor(uid: string, drillId: string, cb: (items: { tex
     (snap) => cb(snap.docs.map((d) => d.data() as { text: string; lesson: string })),
     (err) => console.warn('[repo] mistakes', err),
   );
+}
+
+// ------------------------------------------------------------------ terms
+
+export type TermDoc = Term & { id: string };
+
+const termsCol = (uid: string) => collection(getDb(), 'users', uid, 'terms');
+
+export function watchTerms(uid: string, cb: (terms: TermDoc[]) => void): () => void {
+  return onSnapshot(
+    termsCol(uid),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Term) }))),
+    (err) => console.warn('[repo] terms', err),
+  );
+}
+
+/** Partial update; the rules check the whole doc, so only known fields go in. */
+export function updateTerm(uid: string, id: string, patch: Partial<Pick<Term, 'status' | 'checklist' | 'box' | 'nextReviewAt'>>): void {
+  void updateDoc(doc(termsCol(uid), id), { ...patch, updatedAt: Date.now() }).catch((err) => console.warn('[repo] update term', err));
+}
+
+export function deleteTerm(uid: string, id: string): void {
+  void deleteDoc(doc(termsCol(uid), id)).catch((err) => console.warn('[repo] delete term', err));
 }

@@ -34,7 +34,8 @@ be tested for free.
 
 ## Functions (AI)
 
-`drillStart`, `drillAnswer`, `drillFinish` in `functions/src/index.ts`.
+`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz` in `functions/src/index.ts`
+(term cards and quizzes use Flash low).
 Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
 Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
 
@@ -71,8 +72,11 @@ Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THI
   only mark one `dropped`.
 - **Drills:** the server writes the hidden story first (`drillKeys`), then each
   round reacts to the answer but stays true to it. Easy = 3 rounds, medium = 4.
-  Mistakes go to `mistakes` (review comes in P5). Terms stay in `drill.newTerms`
-  until the Terms tab (P2).
+  Mistakes go to `mistakes` (review comes in P5).
+- **Terms:** scoring a drill also writes a card for each new term (`terms/{id}`,
+  id = lowercase name with `-`). `termCard` adds terms by hand, `termQuiz` makes
+  3 questions. Review uses Leitner boxes (1, 3, 7, 14, 30 days, `src/lib/leitner.ts`);
+  right in box 5 = known. Today shows the review when something is due.
 - **Writes are never awaited** (`src/lib/repo.ts`): offline, a write goes to the
   cache at once and syncs later.
 - **Nav:** a left rail on wide screens, a scrolling row of words on phones

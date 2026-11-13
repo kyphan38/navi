@@ -6,9 +6,12 @@ import { useSyncExternalStore, type ReactNode } from 'react';
 import PageHead from '@/components/PageHead';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
+import { useNow } from '@/hooks/useNow';
+import { useTerms } from '@/hooks/useTerms';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { dayOf, parseDay } from '@/lib/day';
 import { scorePercent, todayDrill, typeLabel } from '@/lib/drills';
+import { dueItems } from '@/lib/leitner';
 
 const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const noop = () => () => {};
@@ -30,6 +33,11 @@ export default function TodayView() {
   const drills = useDrills();
   const { start, busy, error } = useStartDrill();
   const pick = day && drills ? todayDrill(day, drills) : null;
+  const terms = useTerms();
+  const now = useNow();
+  // Review shows once anything is in review; done = nothing due right now.
+  const inReview = (terms ?? []).some((t) => t.status === 'learning');
+  const due = terms && now ? dueItems(terms, now).length : 0;
 
   return (
     <main className="column">
@@ -65,6 +73,18 @@ export default function TodayView() {
               </Link>
             )}
           </Stop>
+          {inReview && (
+            <Stop done={due === 0} label="review">
+              {due > 0 ? (
+                <Link href="/terms/?review=1" className="group inline-flex items-baseline gap-3">
+                  <span className="text-ink">{due} {due === 1 ? 'term' : 'terms'}</span>
+                  <span className="text-faint transition-colors group-hover:text-ink">start</span>
+                </Link>
+              ) : (
+                <span className="text-muted">nothing due</span>
+              )}
+            </Stop>
+          )}
         </ul>
       )}
       {error && (

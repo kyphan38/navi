@@ -71,6 +71,11 @@ export function fakeFinish(): string {
       { text: 'You did not check for double payments.', lesson: 'After a payment incident, always check for stuck or double transactions.' },
       { text: 'You did not post a status update early.', lesson: 'Post a short update in the first 10 minutes, even if you do not know the cause.' },
     ],
-    newTerms: ['connection pool', 'rollback', 'success rate', 'incident channel'],
+    newTerms: [
+      { name: 'connection pool', area: 'Data', oneLine: 'A set of open database links that requests share.' },
+      { name: 'rollback', area: 'Delivery', oneLine: 'Going back to the last working version.' },
+      { name: 'success rate', area: 'Reliability', oneLine: 'The share of requests that work.' },
+      { name: 'incident channel', area: 'Communication', oneLine: 'One chat room where everyone follows an outage.' },
+    ],
   });
 }
