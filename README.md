@@ -34,7 +34,7 @@ be tested for free.
 
 ## Functions (AI)
 
-`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz`, `courseSplit` in `functions/src/index.ts`
+`drillStart`, `drillAnswer`, `drillFinish`, `termCard`, `termQuiz`, `courseSplit`, `skillTag`, `explainBack` in `functions/src/index.ts`
 (term cards and quizzes use Flash low).
 Deploy: `npm run fn:env`, then `firebase deploy --only functions`. The key lives in
 Secret Manager (`firebase functions:secrets:set GEMINI_API_KEY`).
@@ -82,6 +82,11 @@ Change a step with `GEMINI_MODEL_START` / `GEMINI_MODEL_FINISH` (and `GEMINI_THI
   `src/lib/plan.ts` takes about 70% of the real weekly average (last 4 planned weeks,
   profile hours until there are 2) and picks the next modules. Today spreads them over
   the days left. Being late moves the finish date; old work never piles onto next week.
+- **Skills and Map (P4):** levels 1-4 come from evidence (`src/lib/skill-level.ts`): done
+  modules and demos, medium+ drills at 70%+, "used at work" notes, and a passed
+  "Explain it back". `skillTag` tags modules and drills with skills. The Map shows the
+  route (associate -> you -> milestones -> senior), a what-if slider with the last 12
+  weeks, milestone checklists and the skill grid. Dates: `src/lib/forecast.ts`.
 - **Writes are never awaited** (`src/lib/repo.ts`): offline, a write goes to the
   cache at once and syncs later.
 - **Nav:** a left rail on wide screens, a scrolling row of words on phones

@@ -522,12 +522,20 @@ Ghi chú khi làm (khác plan):
 - Một khóa học đang chạy tại một thời điểm (`Để sau`: nhiều khóa).
 - Tick nhanh liên tiếp: ngày dùng increment/arrayUnion, khóa học giữ các tick chưa về snapshot (`useTick`).
 
-### P4 - Kỹ năng + Map
+### P4 - Kỹ năng + Map (xong 2026-11-13)
 `skill-level.ts`, gắn bằng chứng tự động (module, demo, drill), nút `used at work` để thêm bằng chứng mức 3,
 `explainBack` cho mức 4. Milestones (mặc định 1 milestone learning theo khóa học + 1 milestone career "Ready for mid-level").
 Trang `map` đủ 3 phần mục 9. `forecast.ts`.
 **Done:** unit test `skill-level.ts` và `forecast.ts`. Kéo thanh trượt đổi ngày ngay. Map đọc được ở 360px
 (lộ trình chuyển thành dọc nếu không vừa).
+Ghi chú khi làm:
+- 27 skill mặc định (`SKILL_CATALOG`), tạo một lần khi mở Map. Chưa sửa/thêm skill được (Để sau).
+- Bằng chứng từ module, demo, drill được tính lại mỗi lần từ dữ liệu; chỉ `work` và `explain` lưu trên skill.
+- `skillTag` (Flash) gắn skill cho module (một lần mỗi khóa, `taggedAt`) và drill đã xong (`tagged`).
+  Thử 138 bài: 118 có skill, phần intro không có; khoảng 30 giây.
+- Milestone học theo khóa có `courseId`: ngày = phút còn lại của khóa, giống trang Learn (cùng tỉ lệ 70%).
+  Milestone mặc định: khóa học, "Core skills at do" (8 skill bảo mật + reliability ở mức 2), "Ready for mid-level" (6 việc).
+- `explainBack`: câu hỏi bằng Flash, chấm bằng Hydrogen (giống chấm drill). Chấm khá nghiêm, nêu đúng chỗ thiếu.
 
 ### P5 - Thêm bài tập
 17 loại còn lại (mục 6.3), mức hard, luật mở mức 6.2, chọn bài hôm nay theo 6.4, sổ lỗi sai + ôn lỗi sai.

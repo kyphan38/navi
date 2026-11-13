@@ -33,3 +33,10 @@ export type SplitModule = { section: string; title: string; minutes: number; kin
 // A long course runs in parts on the server; allow up to 5 minutes.
 export const splitCourse = (data: { text: string }) =>
   httpsCallable<{ text: string }, { modules: SplitModule[] }>(getFunctionsClient(), 'courseSplit', { timeout: 300_000 })(data).then((r) => r.data);
+
+export const tagSkills = (data: Record<string, never> = {}) =>
+  httpsCallable<Record<string, never>, { tagged: number }>(getFunctionsClient(), 'skillTag', { timeout: 300_000 })(data).then((r) => r.data);
+
+export type Turn = { question: string; answer?: string };
+export type Grade = { pass: boolean; feedback: string; gaps: string[] };
+export const explainBack = call<{ skillId: string; turns: Turn[] }, { question?: string; grade?: Grade }>('explainBack');

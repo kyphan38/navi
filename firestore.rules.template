@@ -62,7 +62,8 @@ service cloud.firestore {
 
     function validDrill(d) {
       return d.keys().hasOnly(['group','type','level','topic','skillIds','clock','brief','rounds','status',
-          'score','debrief','seniorPath','whatIf','newTerms','startedAt','doneAt'])
+          'score','debrief','seniorPath','whatIf','newTerms','tagged','startedAt','doneAt'])
+        && (!('tagged' in d) || d.tagged is bool)
         && d.group in ['tech','ai','comms','business','writing']
         && str(d.type, 40)
         && d.level in ['easy','medium','hard']
@@ -102,7 +103,8 @@ service cloud.firestore {
     }
 
     function validCourse(d) {
-      return d.keys().hasOnly(['title','goal','deadline','modules','status','createdAt','updatedAt'])
+      return d.keys().hasOnly(['title','goal','deadline','modules','status','taggedAt','createdAt','updatedAt'])
+        && (!('taggedAt' in d) || d.taggedAt is int)
         && str(d.title, 300) && d.title.size() > 0
         && str(d.goal, 300)
         && optInt(d.deadline)
@@ -131,7 +133,8 @@ service cloud.firestore {
     }
 
     function validMilestone(d) {
-      return d.keys().hasOnly(['title','kind','needs','checklist','order','doneAt'])
+      return d.keys().hasOnly(['title','kind','courseId','needs','checklist','order','doneAt'])
+        && (!('courseId' in d) || optStr(d.courseId, 100))
         && str(d.title, 200) && d.title.size() > 0
         && d.kind in ['learning','career']
         && d.needs is list && d.needs.size() <= 50

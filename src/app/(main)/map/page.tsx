@@ -1,5 +1,5 @@
-import EmptyPage from '@/components/EmptyPage';
+import MapView from '@/components/MapView';
 
 export default function MapPage() {
-  return <EmptyPage title="map" />;
+  return <MapView />;
 }

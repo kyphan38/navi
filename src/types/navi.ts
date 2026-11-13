@@ -63,6 +63,7 @@ export type Drill = {
   seniorPath: string | null;
   whatIf: { question: string; answer: string }[];
   newTerms: string[];
+  tagged?: boolean;            // skillIds were set by skillTag (may still be empty)
   startedAt: number; doneAt: number | null;
 };
 
@@ -116,6 +117,7 @@ export type Course = {
   deadline: number | null;
   modules: CourseModule[];
   status: 'active' | 'paused' | 'done';
+  taggedAt?: number;           // modules got skill ids (Map page, skillTag)
   createdAt: number; updatedAt: number;
 };
 
@@ -140,6 +142,7 @@ export type Day = {
 export type Milestone = {
   title: string;               // "Pass AWS Security Specialty", "Ready for mid-level"
   kind: 'learning' | 'career';
+  courseId: string | null;     // learning milestone that is "finish this course"
   needs: { skillId: string; level: SkillLevel }[];
   checklist: { text: string; done: boolean; at: number | null }[];
   order: number;

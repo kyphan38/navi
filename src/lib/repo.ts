@@ -5,11 +5,27 @@
 // settles when the network is back. Fire and forget, read state from snapshots.
 // ============================================================
 
-import { arrayRemove, arrayUnion, collection, deleteDoc, doc, documentId, increment, limit, onSnapshot, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore';
+import {
+  arrayRemove,
+  arrayUnion,
+  collection,
+  deleteDoc,
+  doc,
+  documentId,
+  increment,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+  writeBatch,
+} from 'firebase/firestore';
 
 import { getDb } from '@/lib/firebase-client';
 import { normalizeProfile } from '@/lib/profile';
-import type { Course, Day, Drill, Profile, Term, Week } from '@/types/navi';
+import type { Course, Day, Drill, Evidence, Milestone, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -182,4 +198,55 @@ export function tickDay(uid: string, id: string, existing: Day | null, m: { id: 
     minutes: increment(done ? m.minutes : -Math.min(m.minutes, existing.minutes)),
     updatedAt: now,
   }).catch((err) => console.warn('[repo] tick day', err));
+}
+
+// ------------------------------------------------------------------ skills, milestones (P4)
+
+export type SkillDoc = Skill & { id: string };
+const skillsCol = (uid: string) => collection(getDb(), 'users', uid, 'skills');
+
+export function watchSkills(uid: string, cb: (skills: SkillDoc[]) => void): () => void {
+  return onSnapshot(
+    skillsCol(uid),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Skill) }))),
+    (err) => console.warn('[repo] skills', err),
+  );
+}
+
+/** Creates the starter skills (ids from the catalog) in one batch. */
+export function seedSkills(uid: string, list: readonly { id: string; name: string; area: string }[]): void {
+  const now = Date.now();
+  const batch = writeBatch(getDb());
+  for (const s of list) batch.set(doc(skillsCol(uid), s.id), { name: s.name, area: s.area, level: 0, evidence: [], createdAt: now, updatedAt: now });
+  void batch.commit().catch((err) => console.warn('[repo] seed skills', err));
+}
+
+export function addSkillEvidence(uid: string, id: string, e: Evidence): void {
+  void updateDoc(doc(skillsCol(uid), id), { evidence: arrayUnion(e), updatedAt: Date.now() }).catch((err) => console.warn('[repo] evidence', err));
+}
+
+/** Caches the level worked out from evidence (the Map computes it every time anyway). */
+export function setSkillLevel(uid: string, id: string, level: SkillLevel): void {
+  void updateDoc(doc(skillsCol(uid), id), { level, updatedAt: Date.now() }).catch((err) => console.warn('[repo] level', err));
+}
+
+export type MilestoneDoc = Milestone & { id: string };
+const milestonesCol = (uid: string) => collection(getDb(), 'users', uid, 'milestones');
+
+export function watchMilestones(uid: string, cb: (ms: MilestoneDoc[]) => void): () => void {
+  return onSnapshot(
+    query(milestonesCol(uid), orderBy('order')),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Milestone) }))),
+    (err) => console.warn('[repo] milestones', err),
+  );
+}
+
+export function addMilestones(uid: string, list: Omit<Milestone, 'doneAt'>[]): void {
+  const batch = writeBatch(getDb());
+  for (const m of list) batch.set(doc(milestonesCol(uid)), { ...m, doneAt: null });
+  void batch.commit().catch((err) => console.warn('[repo] add milestones', err));
+}
+
+export function updateMilestone(uid: string, id: string, patch: Partial<Pick<Milestone, 'checklist' | 'doneAt'>>): void {
+  void updateDoc(doc(milestonesCol(uid), id), patch).catch((err) => console.warn('[repo] update milestone', err));
 }
