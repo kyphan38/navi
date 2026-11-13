@@ -35,7 +35,8 @@ async function client(name, email) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9110', { disableWarnings: true });
   const db = getFirestore(app);
   connectFirestoreEmulator(db, '127.0.0.1', 8110);
-  const token = JSON.stringify({ sub: `check-${name}`, email, email_verified: true });
+  // One emulator account per email: an old account keeps its old email.
+  const token = JSON.stringify({ sub: `check-${name}-${email}`, email, email_verified: true });
   const cred = await signInWithCredential(auth, GoogleAuthProvider.credential(token));
   return { db, uid: cred.user.uid };
 }
