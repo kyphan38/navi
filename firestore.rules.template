@@ -62,7 +62,8 @@ service cloud.firestore {
 
     function validDrill(d) {
       return d.keys().hasOnly(['group','type','level','topic','skillIds','clock','brief','rounds','status',
-          'score','debrief','seniorPath','whatIf','automate','newTerms','tagged','startedAt','doneAt'])
+          'score','debrief','seniorPath','whatIf','automate','evenBetter','newTerms','tagged','startedAt','doneAt'])
+        && (!('evenBetter' in d) || (d.evenBetter is list && d.evenBetter.size() <= 4))
         && (!('automate' in d) || str(d.automate, 2000))
         && (!('tagged' in d) || d.tagged is bool)
         && d.group in ['tech','ai','comms','business','writing']

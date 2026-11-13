@@ -312,6 +312,7 @@ export const drillFinish = onCall(OPTS, async (req) => {
       seniorPath: res.seniorPath || key.seniorPath,
       whatIf: res.whatIf,
       automate: res.automate,
+      evenBetter: res.evenBetter,
       newTerms: res.newTerms.map((t) => t.name),
       doneAt: now,
     },

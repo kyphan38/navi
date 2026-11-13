@@ -73,6 +73,10 @@ export function fakeFinish(): string {
     ],
     automate:
       'Add a CI check on every pull request that fails when the DB pool size drops below 30. Also add a CloudWatch alarm at 80% pool use.',
+    evenBetter: [
+      'Check the pool size of every payment service, not only this one, with one shared Terraform module.',
+      'Add a pool usage panel to the service dashboard so the next on-call sees it in one look.',
+    ],
     newTerms: [
       { name: 'connection pool', area: 'Data', oneLine: 'A set of open database links that requests share.' },
       { name: 'rollback', area: 'Delivery', oneLine: 'Going back to the last working version.' },

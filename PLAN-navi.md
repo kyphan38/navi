@@ -347,6 +347,8 @@ Thêm 2026-11-13 (chủ app yêu cầu):
   (ví dụ tìm hết lỗi trong một policy).
 - Vòng về "lần sau tránh thế nào" luôn hướng tới chặn tự động: CI check trên pull request, policy as code,
   pipeline gate hoặc alert. Debrief có thêm mục `automate it` (công cụ, chạy ở đâu, chặn cái gì).
+- Debrief luôn có `even better`: 2-3 ý đi xa hơn một câu trả lời đúng, kể cả khi điểm tuyệt đối
+  (áp dụng cho mọi account/team, đo bằng metric hoặc SLO, runbook, dạy lại, giảm toil hoặc chi phí).
 
 **Mở mức:** mỗi loại bài bắt đầu ở easy. Lên medium khi 3 bài easy gần nhất của loại đó đều >= 70%.
 Lên hard tương tự từ medium. Người dùng luôn có thể chọn mức thấp hơn. Không bao giờ tự hạ mức.

@@ -80,6 +80,20 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
         </div>
       </section>
 
+      {drill.evenBetter && drill.evenBetter.length > 0 && (
+        <section>
+          <SectionTitle>even better</SectionTitle>
+          <ul className="space-y-2">
+            {drill.evenBetter.map((e, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="font-mono text-[12px] text-faint">+</span>
+                <span className="text-ink">{e}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {drill.automate && (
         <section>
           <SectionTitle>automate it</SectionTitle>

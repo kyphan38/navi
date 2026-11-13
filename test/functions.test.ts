@@ -113,3 +113,15 @@ test('parseFinish keeps the automate advice, empty when not given', () => {
   delete raw.automate;
   assert.equal(parseFinish(JSON.stringify(raw), 'feedback').automate, '');
 });
+
+test('parseFinish keeps up to 3 even-better ideas', () => {
+  assert.equal(parseFinish(fakeFinish(), 'incident').evenBetter.length, 2);
+  const raw = JSON.parse(fakeFinish());
+  raw.evenBetter = ['a', '', 'b', 'c', 'd'];
+  assert.deepEqual(parseFinish(JSON.stringify(raw), 'incident').evenBetter, ['a', 'b', 'c']);
+});
+
+test('finish prompt asks for even-better ideas even at full score', () => {
+  const rounds = [{ prompt: 'p', kind: 'text' as const, options: [], hint: '', answer: 'a' }];
+  assert.ok(buildFinishPrompt(profile, 'incident', 'easy', 'b', key, rounds).includes('ALWAYS, even when every score is 3'));
+});

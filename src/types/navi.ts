@@ -63,6 +63,7 @@ export type Drill = {
   seniorPath: string | null;
   whatIf: { question: string; answer: string }[];
   automate?: string;           // how a machine can catch it next time (CI check, policy as code, alert)
+  evenBetter?: string[];       // ideas beyond a correct answer, given even at full score
   newTerms: string[];
   tagged?: boolean;            // skillIds were set by skillTag (may still be empty)
   startedAt: number; doneAt: number | null;

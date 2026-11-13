@@ -22,6 +22,7 @@ export type FinishResult = {
   whatIf: { question: string; answer: string }[];
   mistakes: { text: string; lesson: string }[];
   automate: string;
+  evenBetter: string[];
   newTerms: TermCard[];
 };
 
@@ -79,9 +80,10 @@ export const FINISH_SCHEMA = {
       items: { type: 'object', properties: { text: { type: 'string' }, lesson: { type: 'string' } }, required: ['text', 'lesson'] },
     },
     automate: { type: 'string' },
+    evenBetter: { type: 'array', items: { type: 'string' } },
     newTerms: { type: 'array', items: TERM_ITEM_SCHEMA },
   },
-  required: ['scores', 'debrief', 'seniorPath', 'whatIf', 'mistakes', 'automate', 'newTerms'],
+  required: ['scores', 'debrief', 'seniorPath', 'whatIf', 'mistakes', 'automate', 'evenBetter', 'newTerms'],
 };
 
 function aboutLearner(p: Profile): string {
@@ -190,6 +192,10 @@ Return JSON:
 - "automate": how to make a machine catch this next time, so no human has to remember: a CI check on the pull request,
   policy as code, a pipeline gate, a test, or an alert. Name the tool or check, where it runs, and what it blocks.
   2-4 short sentences. Use "" only when nothing technical can be automated (for example a pure people skill).
+- "evenBetter": 2-3 ideas that go BEYOND a correct answer, ALWAYS, even when every score is 3.
+  Think like a staff engineer: make the fix work for every account or team, measure it (a metric or SLO),
+  write it down (runbook, design doc), teach it, cut toil or cost, plan for the next bigger failure.
+  Each idea: one or two sentences, concrete, for this drill only. Do not repeat "automate" or the senior path.
 - "newTerms": 2-6 technical terms from this drill that are worth learning. Each item:
   ${TERM_CARD_RULES.split('\n').join('\n  ')}`;
 }
@@ -283,6 +289,7 @@ export function parseFinish(text: string, type: DrillType): FinishResult {
     whatIf: pairs(d.whatIf, (o) => (str(o.question, 400) ? { question: str(o.question, 400), answer: str(o.answer, 1000) } : null), 3),
     mistakes: pairs(d.mistakes, (o) => (str(o.text, 1000) ? { text: str(o.text, 1000), lesson: str(o.lesson, 1000) } : null), 3),
     automate: str(d.automate, 1200),
+    evenBetter: Array.isArray(d.evenBetter) ? d.evenBetter.map((x) => str(x, 500)).filter(Boolean).slice(0, 3) : [],
     newTerms: uniqueCards(Array.isArray(d.newTerms) ? d.newTerms : []).slice(0, 8),
   };
 }
