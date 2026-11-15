@@ -579,6 +579,6 @@ Ghi chú khi làm:
 ## Để sau
 
 - Phỏng vấn thử (troubleshooting, system design hạ tầng, behavioral dùng câu chuyện từ bằng chứng).
-- Review hàng tháng: AI đọc dữ liệu cả tháng, nói đang tiến bộ ở đâu, đang né việc gì.
+- ~~Review hàng tháng~~ Đã làm 2026-11-15: function `monthlyReview` chạy 07:00 ngày 1, ghi `users/{uid}/months/{YYYY-MM}` (chỉ đọc ở client), hiện trên trang learn.
+- Link vào mora/logi để tính giờ học tự động: **không làm** (chủ app quyết định 2026-11-15, giờ học chỉ ở mora và logi).
 - Nhiều khóa học cùng lúc.
-- Link vào mora/logi để tính giờ học tự động.

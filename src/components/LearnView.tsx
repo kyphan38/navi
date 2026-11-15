@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useUid } from '@/components/AuthGate';
 import CourseAdd from '@/components/CourseAdd';
 import ModuleRow from '@/components/ModuleRow';
+import MonthReview from '@/components/MonthReview';
 import PageHead from '@/components/PageHead';
 import WeekPlanner, { ForecastLine } from '@/components/WeekPlanner';
 import { useLearning } from '@/hooks/useLearning';
@@ -33,6 +34,7 @@ export default function LearnView() {
       <main className="column">
         <PageHead title="learn" />
         <CourseAdd />
+        <MonthReview />
       </main>
     );
   }
@@ -83,6 +85,8 @@ export default function LearnView() {
           <WeekPlanner learning={learning} course={course} />
         )}
       </div>
+
+      <MonthReview />
 
       <section className="mt-12 text-[15px]">
         <SectionTitle>all modules</SectionTitle>

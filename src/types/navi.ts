@@ -159,6 +159,16 @@ export type Digest = {
   createdAt: number;
 };
 
+// --- Months (users/{uid}/months/{YYYY-MM}) - monthly review, written by Functions on the 1st ---
+export type Month = {
+  summary: string;
+  progress: string[];
+  avoiding: string[];
+  next: string[];
+  stats: { minutes: number; drillsDone: number; modulesDone: number; termsAdded: number };
+  createdAt: number;
+};
+
 // --- Asks (users/{uid}/asks/{id}) - "Ask a senior", written by Functions ---
 export type Ask = {
   question: string;
