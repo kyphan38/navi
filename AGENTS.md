@@ -11,6 +11,16 @@ server code is Cloud Functions for AI (from P1) - data is protected by
   Do not change an invariant without asking the owner.
 - Keep it minimal. New ideas go to "Để sau" in the plan, not into the code.
 
+## Scope: which app keeps which terms
+
+Owner decision (2026-11-15), shared with cogi:
+
+- cogi: terms about thinking and reasoning (from "Learn first" in exercises).
+- navi: terms about work and tech (career, engineering, AI).
+- English vocabulary: Anki, not an app.
+
+Do not add thinking/reasoning terms or English vocabulary review to navi.
+
 ## Git commits
 
 Format: `<type>(<scope>): <summary>` (Conventional Commits, imperative,
