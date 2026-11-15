@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   documentId,
+  getDoc,
   getDocs,
   increment,
   limit,
@@ -25,9 +26,9 @@ import {
 } from 'firebase/firestore';
 
 import { getDb } from '@/lib/firebase-client';
-import { EXPORT_COLLECTIONS, type ExportCollection, type ExportDoc } from '@/lib/export';
+import { EXPORT_COLLECTIONS, type ExportCollection, type ExportData, type ExportDoc } from '@/lib/export';
 import { normalizeProfile } from '@/lib/profile';
-import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
+import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Month, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -284,6 +285,17 @@ export function watchDigests(uid: string, cb: (items: DigestDoc[]) => void): () 
   );
 }
 
+export type MonthDoc = Month & { id: string };
+
+/** Newest 12 monthly reviews. */
+export function watchMonths(uid: string, cb: (items: MonthDoc[]) => void): () => void {
+  return onSnapshot(
+    query(collection(getDb(), 'users', uid, 'months'), orderBy('createdAt', 'desc'), limit(12)),
+    (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Month) }))),
+    (err) => console.warn('[repo] months', err),
+  );
+}
+
 export function watchAsks(uid: string, cb: (items: AskDoc[]) => void): () => void {
   return onSnapshot(
     query(collection(getDb(), 'users', uid, 'asks'), orderBy('createdAt', 'desc'), limit(50)),
@@ -298,13 +310,14 @@ export function deleteAsk(uid: string, id: string): void {
 
 // --- Export ---
 
-/** Reads every exportable collection once (server or offline cache). */
-export async function readAllForExport(uid: string): Promise<Record<ExportCollection, ExportDoc[]>> {
-  const entries = await Promise.all(
-    EXPORT_COLLECTIONS.map(async (name) => {
+/** Reads the profile and every exportable collection once (server or offline cache). */
+export async function readAllForExport(uid: string): Promise<ExportData> {
+  const [profile, ...entries] = await Promise.all([
+    getDoc(profileRef(uid)).then((d) => (d.exists() ? d.data() : null)),
+    ...EXPORT_COLLECTIONS.map(async (name) => {
       const snap = await getDocs(collection(getDb(), 'users', uid, name));
       return [name, snap.docs.map((d) => ({ id: d.id, ...d.data() }))] as const;
     }),
-  );
-  return Object.fromEntries(entries) as Record<ExportCollection, ExportDoc[]>;
+  ]);
+  return { profile, ...(Object.fromEntries(entries as (readonly [ExportCollection, ExportDoc[]])[]) as Record<ExportCollection, ExportDoc[]>) };
 }
