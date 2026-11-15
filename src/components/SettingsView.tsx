@@ -5,9 +5,11 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react
 import { useUid } from '@/components/AuthGate';
 import PageHead from '@/components/PageHead';
 import { useAuth } from '@/contexts/AuthContext';
+import { dayOf } from '@/lib/day';
+import { buildExport, exportFilename } from '@/lib/export';
 import { applyTheme, themeStore, type Theme } from '@/lib/prefs';
 import { DEFAULT_PROFILE, PROFILE_LIMITS } from '@/lib/profile';
-import { saveProfile, watchProfile } from '@/lib/repo';
+import { readAllForExport, saveProfile, watchProfile } from '@/lib/repo';
 import type { Profile } from '@/types/navi';
 
 type Field = keyof Profile;
@@ -19,6 +21,22 @@ const FIELDS: readonly { key: Field; label: string; num?: readonly [number, numb
   { key: 'focus', label: 'focus' },
   { key: 'hoursPerWeek', label: 'hours a week', num: PROFILE_LIMITS.hours },
 ];
+
+/**
+ * Downloads a file. Revoking the URL right away breaks the file in Safari - it
+ * reads the blob after this function returns (same as hodi SettingsView).
+ */
+function save(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
 
 function SectionTitle({ children }: { children: ReactNode }) {
   return <h2 className="mb-2 font-mono text-[12px] tracking-[0.12em] text-faint">{children}</h2>;
@@ -41,6 +59,20 @@ export default function SettingsView() {
   const [pending, setPending] = useState(false);
   // Text being typed; saved on blur. Keys not in here show the stored value.
   const [draft, setDraft] = useState<Partial<Record<Field, string>>>({});
+  const [exporting, setExporting] = useState(false);
+
+  const exportAll = async () => {
+    setExporting(true);
+    try {
+      const now = Date.now();
+      const json = buildExport(await readAllForExport(uid), now);
+      save(new Blob([json], { type: 'application/json;charset=utf-8' }), exportFilename(dayOf(now)));
+    } catch (err) {
+      console.warn('[settings] export', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(
     () =>
@@ -108,6 +140,15 @@ export default function SettingsView() {
               </button>
             ))}
           </div>
+        </Row>
+      </section>
+
+      <section className="mt-10 text-[15px]">
+        <SectionTitle>data</SectionTitle>
+        <Row label="everything">
+          <button type="button" disabled={exporting} onClick={() => void exportAll()} className="text-faint hover:text-ink disabled:opacity-40">
+            {exporting ? 'exporting' : 'export .json'}
+          </button>
         </Row>
       </section>
 

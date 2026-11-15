@@ -12,6 +12,7 @@ import {
   deleteDoc,
   doc,
   documentId,
+  getDocs,
   increment,
   limit,
   onSnapshot,
@@ -24,6 +25,7 @@ import {
 } from 'firebase/firestore';
 
 import { getDb } from '@/lib/firebase-client';
+import { EXPORT_COLLECTIONS, type ExportCollection, type ExportDoc } from '@/lib/export';
 import { normalizeProfile } from '@/lib/profile';
 import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
 
@@ -292,4 +294,17 @@ export function watchAsks(uid: string, cb: (items: AskDoc[]) => void): () => voi
 
 export function deleteAsk(uid: string, id: string): void {
   void deleteDoc(doc(getDb(), 'users', uid, 'asks', id)).catch((err) => console.warn('[repo] delete ask', err));
+}
+
+// --- Export ---
+
+/** Reads every exportable collection once (server or offline cache). */
+export async function readAllForExport(uid: string): Promise<Record<ExportCollection, ExportDoc[]>> {
+  const entries = await Promise.all(
+    EXPORT_COLLECTIONS.map(async (name) => {
+      const snap = await getDocs(collection(getDb(), 'users', uid, name));
+      return [name, snap.docs.map((d) => ({ id: d.id, ...d.data() }))] as const;
+    }),
+  );
+  return Object.fromEntries(entries) as Record<ExportCollection, ExportDoc[]>;
 }
