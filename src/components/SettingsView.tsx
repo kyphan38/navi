@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
 import { useUid } from '@/components/AuthGate';
@@ -104,6 +105,14 @@ export default function SettingsView() {
   return (
     <main className="column">
       <PageHead title="settings" meta={pending ? 'saving' : undefined} />
+
+      <section className="mt-10 text-[15px]">
+        <Row label="guide">
+          <Link href="/guide/" className="text-faint hover:text-ink">
+            read
+          </Link>
+        </Row>
+      </section>
 
       <section className="mt-10 text-[15px]">
         <SectionTitle>profile</SectionTitle>
