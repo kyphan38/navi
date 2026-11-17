@@ -40,7 +40,7 @@ export function useMapData() {
   const [tagging, setTagging] = useState(false);
   const [tagError, setTagError] = useState<string | null>(null);
   const tagTried = useRef(false);
-  const seeded = useRef({ skills: false, milestones: false, course: '' });
+  const seeded = useRef({ skills: false, milestones: false, courses: new Set<string>() });
 
   useEffect(() => watchSkills(uid, setSkills), [uid]);
   useEffect(() => watchMilestones(uid, setMilestones), [uid]);
@@ -48,7 +48,7 @@ export function useMapData() {
   const since = learning.today ? addDays(mondayOf(learning.today), -77) : '';
   useEffect(() => (since ? watchDaysSince(uid, since, setDays) : undefined), [uid, since]);
 
-  const { course, ready } = learning;
+  const { course, courses, ready } = learning;
 
   // Seed once: skills, milestones, and a course milestone when a course is added later.
   useEffect(() => {
@@ -62,15 +62,21 @@ export function useMapData() {
     if (milestones.length === 0 && !seeded.current.milestones) {
       seeded.current.milestones = true;
       addMilestones(uid, defaultMilestones(course ? { id: course.id, title: course.title } : null));
-    } else if (course && milestones.length > 0 && !milestones.some((m) => m.courseId === course.id) && seeded.current.course !== course.id) {
-      seeded.current.course = course.id;
-      const [courseMs] = defaultMilestones({ id: course.id, title: course.title });
-      addMilestones(uid, [{ ...courseMs, order: 0.5 }]);
+    } else if (milestones.length > 0) {
+      // A course milestone for every running course that has none yet (V6).
+      const missing = courses.filter((c) => !milestones.some((m) => m.courseId === c.id) && !seeded.current.courses.has(c.id));
+      if (missing.length) {
+        missing.forEach((c) => seeded.current.courses.add(c.id));
+        addMilestones(
+          uid,
+          missing.map((c, i) => ({ ...defaultMilestones({ id: c.id, title: c.title })[0], order: 0.5 + i * 0.01 })),
+        );
+      }
     }
-  }, [milestones, ready, course, uid]);
+  }, [milestones, ready, course, courses, uid]);
 
   // Tag once per visit when something is untagged and the skills exist.
-  const needsTag = !!skills?.length && ((course && !course.taggedAt) || (drills ?? []).some((d) => d.status === 'done' && d.tagged !== true));
+  const needsTag = !!skills?.length && (courses.some((c) => !c.taggedAt) || (drills ?? []).some((d) => d.status === 'done' && d.tagged !== true));
   useEffect(() => {
     if (!needsTag || tagTried.current) return;
     tagTried.current = true;
@@ -82,13 +88,13 @@ export function useMapData() {
 
   const views = useMemo<SkillView[] | null>(() => {
     if (!skills) return null;
-    const modules = course?.modules ?? [];
+    const modules = courses.flatMap((c) => c.modules);
     return skills.map((s) => {
       const all = [...derivedEvidence(s.id, modules, drills ?? []), ...s.evidence];
       const { level, reachedAt } = levelOf(all);
       return { ...s, all, computed: level, reachedAt };
     });
-  }, [skills, course, drills]);
+  }, [skills, courses, drills]);
 
   // Keep the cached level on the skill doc in step.
   useEffect(() => {

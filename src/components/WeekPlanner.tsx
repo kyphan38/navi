@@ -6,7 +6,7 @@ import { useUid } from '@/components/AuthGate';
 import { useNow } from '@/hooks/useNow';
 import type { useLearning } from '@/hooks/useLearning';
 import { addDays } from '@/lib/day';
-import { drillTopics, forecast, hm, mondayOf, planWeek, weekOf } from '@/lib/plan';
+import { courseShares, drillTopics, forecast, hm, mondayOf, planWeek, weekOf } from '@/lib/plan';
 import { saveWeek, updateCourse, updateWeek, type CourseDoc } from '@/lib/repo';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
@@ -60,8 +60,33 @@ export function ForecastLine({ course, budgetMinutes, now }: { course: CourseDoc
   );
 }
 
-/** Weekly review and plan (PLAN-navi.md 7.3): look back, set the budget, confirm. */
-export default function WeekPlanner({ learning, course }: { learning: ReturnType<typeof useLearning>; course: CourseDoc }) {
+/** % of the weekly hours for one course, saved on blur (V6). */
+function ShareInput({ course, value }: { course: CourseDoc; value: number }) {
+  const uid = useUid();
+  const [text, setText] = useState<string | null>(null);
+  const commit = () => {
+    if (text === null) return;
+    const n = Math.round(Number(text));
+    if (Number.isFinite(n) && n >= 0 && n <= 100) updateCourse(uid, course.id, { share: n });
+    setText(null);
+  };
+  return (
+    <input
+      type="number"
+      min={0}
+      max={100}
+      value={text ?? String(value)}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+      aria-label={`Share of hours for ${course.title}`}
+      className="w-12 border-b border-line bg-transparent pb-0.5 text-right font-mono text-[14px] text-ink tabular-nums focus:border-line-strong"
+    />
+  );
+}
+
+/** Weekly review and plan (PLAN-navi.md 7.3): look back, set the budget, split it between courses (V6), confirm. */
+export default function WeekPlanner({ learning, courses }: { learning: ReturnType<typeof useLearning>; courses: CourseDoc[] }) {
   const uid = useUid();
   const now = useNow();
   const { today, weekId, weeks, days, budget } = learning;
@@ -74,18 +99,24 @@ export default function WeekPlanner({ learning, course }: { learning: ReturnType
   const hoursRef = useRef<HTMLInputElement>(null);
 
   const budgetMinutes = Math.max(0, Math.round((Number(hours) || 0) * 60));
-  const planned = planWeek(course.modules, budgetMinutes);
+  const shares = courseShares(courses);
+  const perCourse = courses.map((c) => {
+    const minutes = Math.round(budgetMinutes * (shares.get(c.id) ?? 0));
+    return { course: c, minutes, planned: planWeek(c.modules, minutes), pct: Math.round((shares.get(c.id) ?? 0) * 100) };
+  });
+  const planned = perCourse.flatMap((p) => p.planned);
   const plannedMinutes = planned.reduce((s, m) => s + m.minutes, 0);
+  const allModules = courses.flatMap((c) => c.modules);
 
   // Last week, if it was planned and not looked back on yet.
   const lastId = weekOf(addDays(mondayOf(today), -7));
   const last = weeks.find((w) => w.id === lastId && !w.review) ?? null;
   const lastIds = new Set(last?.plan.moduleIds ?? []);
-  const lastModules = course.modules.filter((m) => lastIds.has(m.id));
+  const lastModules = allModules.filter((m) => lastIds.has(m.id));
   const lastDone = lastModules.filter((m) => m.doneAt !== null);
   const lastMissed = lastModules.filter((m) => m.doneAt === null);
   const lastMinutes = days.filter((d) => weekOf(d.id) === lastId).reduce((s, d) => s + d.minutes, 0);
-  const f = forecast(course.modules, budgetMinutes, now, course.deadline);
+  const anyLate = perCourse.some((p) => forecast(p.course.modules, p.minutes, now, p.course.deadline).late);
 
   const confirm = () => {
     if (last) {
@@ -145,15 +176,34 @@ export default function WeekPlanner({ learning, course }: { learning: ReturnType
         </label>
         <p className="mt-3 text-muted">
           {planned.length} modules · {hm(plannedMinutes)}
-          {planned[0] && <span className="text-faint"> · from {planned[0].title}</span>}
+          {courses.length === 1 && planned[0] && <span className="text-faint"> · from {planned[0].title}</span>}
         </p>
+        {courses.length > 1 && (
+          <ul className="mt-3 space-y-1.5">
+            {perCourse.map((p) => (
+              <li key={p.course.id} className="flex items-baseline gap-3">
+                <ShareInput course={p.course} value={p.pct} />
+                <span className="font-mono text-[12px] text-faint">%</span>
+                <span className="min-w-0 flex-1 truncate text-ink">{p.course.title}</span>
+                <span className="shrink-0 font-mono text-[12px] text-faint tabular-nums">
+                  {p.planned.length} · {hm(p.minutes)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-4 space-y-3">
           <input value={workTask} onChange={(e) => setWorkTask(e.target.value)} maxLength={300} placeholder="one task linked to work (optional)" aria-label="Work task" className={field} />
           <input value={explore} onChange={(e) => setExplore(e.target.value)} maxLength={300} placeholder="something new to explore (optional)" aria-label="Explore" className={field} />
         </div>
-        <div className="mt-4">
-          <ForecastLine course={course} budgetMinutes={budgetMinutes} now={now} />
-          {f.late && (
+        <div className="mt-4 space-y-2">
+          {perCourse.map((p) => (
+            <div key={p.course.id}>
+              {courses.length > 1 && <p className="text-[13px] text-faint">{p.course.title}</p>}
+              <ForecastLine course={p.course} budgetMinutes={p.minutes} now={now} />
+            </div>
+          ))}
+          {anyLate && (
             <button type="button" onClick={() => hoursRef.current?.focus()} className="mt-1 font-mono text-[12px] text-faint hover:text-ink">
               more hours
             </button>

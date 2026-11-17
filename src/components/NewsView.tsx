@@ -9,6 +9,8 @@ import { useLearning } from '@/hooks/useLearning';
 import { aiError, newsNow } from '@/lib/ai';
 import { weekOf } from '@/lib/plan';
 import { watchDigests, type DigestDoc } from '@/lib/repo';
+import { watchSaved, type SavedDoc } from '@/lib/repo-career';
+import { SaveItem, SavedList } from '@/components/news/Saved';
 import type { NewsItem } from '@/types/navi';
 
 function SectionTitle({ children }: { children: string }) {
@@ -24,7 +26,9 @@ function Out({ href, children }: { href: string; children: string }) {
   );
 }
 
-function Items({ items }: { items: NewsItem[] }) {
+type SaveCtx = { uid: string; savedUrls: ReadonlySet<string> };
+
+function Items({ items, save }: { items: NewsItem[]; save: SaveCtx }) {
   return (
     <ul className="space-y-4">
       {items.map((i) => (
@@ -34,13 +38,14 @@ function Items({ items }: { items: NewsItem[] }) {
             {i.source && <span className="ml-2 font-mono text-[11px] text-faint">{i.source}</span>}
           </p>
           {i.why && <p className="mt-0.5 text-[14px] text-muted">{i.why}</p>}
+          <SaveItem uid={save.uid} item={i} saved={save.savedUrls.has(i.url)} />
         </li>
       ))}
     </ul>
   );
 }
 
-function DigestBody({ d }: { d: DigestDoc }) {
+function DigestBody({ d, save }: { d: DigestDoc; save: SaveCtx }) {
   const banking = d.items.filter((i) => i.group === 'banking');
   const outside = d.items.filter((i) => i.group !== 'banking');
   return (
@@ -48,13 +53,13 @@ function DigestBody({ d }: { d: DigestDoc }) {
       {banking.length > 0 && (
         <section>
           <SectionTitle>inside banking</SectionTitle>
-          <Items items={banking} />
+          <Items items={banking} save={save} />
         </section>
       )}
       {outside.length > 0 && (
         <section>
           <SectionTitle>outside</SectionTitle>
-          <Items items={outside} />
+          <Items items={outside} save={save} />
         </section>
       )}
       {d.postmortem && (
@@ -89,12 +94,15 @@ export default function NewsView() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
 
+  const [saved, setSaved] = useState<SavedDoc[]>([]);
   useEffect(() => watchDigests(uid, setDigests), [uid]);
+  useEffect(() => watchSaved(uid, setSaved), [uid]);
   if (!digests || !today) return <main className="column" />;
 
   const thisWeek = weekOf(today);
   const current = digests.find((d) => d.id === thisWeek) ?? null;
   const older = digests.filter((d) => d.id !== thisWeek);
+  const save: SaveCtx = { uid, savedUrls: new Set(saved.map((s) => s.url)) };
 
   const get = async () => {
     setBusy(true);
@@ -112,9 +120,11 @@ export default function NewsView() {
     <main className="column">
       <PageHead title="news" meta={thisWeek.replace('-W', ' week ')} />
 
+      <SavedList uid={uid} items={saved} />
+
       <div className="mt-8">
         {current ? (
-          <DigestBody d={current} />
+          <DigestBody d={current} save={save} />
         ) : busy ? (
           <Waiting word="searching" />
         ) : (
@@ -137,7 +147,7 @@ export default function NewsView() {
               </button>
               {open === d.id && (
                 <div className="mb-4 ml-1 border-l border-line-strong pl-4 pt-2">
-                  <DigestBody d={d} />
+                  <DigestBody d={d} save={save} />
                 </div>
               )}
             </div>

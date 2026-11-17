@@ -13,3 +13,5 @@ export { courseSplit, skillTag, explainBack } from './learn.ts';
 export { weeklyDigest, newsNow } from './newsFns.ts';
 export { monthlyReview } from './monthFns.ts';
 export { askSenior } from './seniorFns.ts';
+export { drillFromAsk, storyDraft, moduleExam, bragDoc, roleNeeds } from './careerFns.ts';
+export { interviewStart, interviewAnswer, interviewFinish } from './interviewFns.ts';

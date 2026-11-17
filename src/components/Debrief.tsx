@@ -7,6 +7,7 @@ import { useUid } from '@/components/AuthGate';
 import { DrillLog } from '@/components/DrillLog';
 import Prose from '@/components/Prose';
 import Waiting from '@/components/Waiting';
+import { useDrills } from '@/hooks/useDrills';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { CRITERIA, scorePercent } from '@/lib/drills';
 import { watchMistakesFor, type DrillDoc } from '@/lib/repo';
@@ -37,6 +38,9 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
   useEffect(() => watchMistakesFor(uid, drill.id, setMistakes), [uid, drill.id]);
 
   const pct = scorePercent(drill.score);
+  const drills = useDrills();
+  // The low-score drill this one redoes (V5), side by side.
+  const before = drill.redoOf ? (drills ?? []).find((d) => d.id === drill.redoOf) : undefined;
   const answers = drill.rounds.map((r) => r.answer).filter((a): a is string => !!a);
 
   return (
@@ -45,6 +49,15 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
         <SectionTitle>
           score <span className="ml-2 text-ink tabular-nums">{pct ?? '-'}%</span>
         </SectionTitle>
+        {before && (
+          <p className="mb-3 text-[14px] text-muted">
+            Redo of{' '}
+            <Link href={`/drill/play/?id=${before.id}`} className="text-ink hover:text-muted">
+              {before.topic}
+            </Link>{' '}
+            ({before.level}): {scorePercent(before.score) ?? '-'}% then, {pct ?? '-'}% now.
+          </p>
+        )}
         <ul className="space-y-1.5">
           {CRITERIA.filter((c) => typeof drill.score?.[c.key] === 'number').map((c) => (
             <li key={c.key} className="flex items-center justify-between gap-4 sm:justify-start">

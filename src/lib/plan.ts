@@ -150,3 +150,20 @@ export function hm(minutes: number): string {
 export function tickModules(modules: CourseModule[], id: string, done: boolean, now: number): CourseModule[] {
   return modules.map((m) => (m.id === id ? { ...m, doneAt: done ? now : null } : m));
 }
+
+/**
+ * Share of the weekly hours for each running course (V6), as fractions that add up to 1.
+ * A course without a share gets an equal part of what the others leave.
+ */
+export function courseShares(courses: { id: string; share?: number }[]): Map<string, number> {
+  const out = new Map<string, number>();
+  if (courses.length === 0) return out;
+  const set = courses.filter((c) => typeof c.share === 'number');
+  const unset = courses.filter((c) => typeof c.share !== 'number');
+  const setTotal = set.reduce((s, c) => s + Math.max(0, c.share!), 0);
+  const leftEach = unset.length ? Math.max(0, 100 - setTotal) / unset.length : 0;
+  const raw = courses.map((c) => [c.id, typeof c.share === 'number' ? Math.max(0, c.share) : leftEach] as const);
+  const total = raw.reduce((s, [, v]) => s + v, 0);
+  for (const [id, v] of raw) out.set(id, total > 0 ? v / total : 1 / courses.length);
+  return out;
+}

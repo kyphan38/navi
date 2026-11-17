@@ -1,6 +1,6 @@
 // Places in the rail, in order. Pure, so tests can check hrefs.
 
-export type Place = 'today' | 'drill' | 'learn' | 'terms' | 'map' | 'ask' | 'news' | 'settings';
+export type Place = 'today' | 'drill' | 'learn' | 'terms' | 'map' | 'interview' | 'ask' | 'news' | 'settings';
 
 export const PLACES: readonly { place: Place; href: string }[] = [
   { place: 'today', href: '/' },
@@ -8,6 +8,7 @@ export const PLACES: readonly { place: Place; href: string }[] = [
   { place: 'learn', href: '/learn/' },
   { place: 'terms', href: '/terms/' },
   { place: 'map', href: '/map/' },
+  { place: 'interview', href: '/interview/' },
   { place: 'ask', href: '/ask/' },
   { place: 'news', href: '/news/' },
   { place: 'settings', href: '/settings/' },

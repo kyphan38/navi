@@ -14,7 +14,8 @@ const toInput = (t: number) => new Date(t - new Date(t).getTimezoneOffset() * 60
 
 /** 1:1 prep: notes for a date range, ready to copy. Defaults to the last 30 days. */
 export default function OneOnOnePrep(props: {
-  course: CourseDoc | null;
+  courses: CourseDoc[];
+  stories: { title: string; createdAt: number }[];
   days: DayDoc[];
   skills: SkillView[];
   drills: DrillDoc[];
@@ -32,14 +33,15 @@ export default function OneOnOnePrep(props: {
   const text = oneOnOne({
     from: parseDay(fromDay).getTime() - 12 * 3_600_000,
     to: parseDay(toDay).getTime() + 12 * 3_600_000 - 1,
-    courseTitle: props.course?.title ?? null,
-    modules: props.course?.modules ?? [],
+    courseTitle: props.courses.length === 1 ? props.courses[0].title : null,
+    modules: props.courses.flatMap((c) => c.modules),
     days: props.days,
     dayTime: (id) => parseDay(id).getTime(),
     skills: props.skills,
     drills: props.drills,
     terms: terms ?? [],
     milestones: props.milestones,
+    stories: props.stories,
   });
 
   const copy = async () => {

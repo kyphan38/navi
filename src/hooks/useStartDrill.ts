@@ -12,11 +12,11 @@ export function useStartDrill() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const start = async (type: DrillType, level: DrillLevel, topic?: string) => {
+  const start = async (type: DrillType, level: DrillLevel, topic?: string, redoOf?: string) => {
     setBusy(true);
     setError(null);
     try {
-      const { id } = await startDrill(topic ? { type, level, topic } : { type, level });
+      const { id } = await startDrill({ type, level, ...(topic ? { topic } : {}), ...(redoOf ? { redoOf } : {}) });
       router.push(`/drill/play/?id=${id}`);
     } catch (err) {
       setError(aiError(err));

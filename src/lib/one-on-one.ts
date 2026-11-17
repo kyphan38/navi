@@ -21,6 +21,8 @@ export type OneOnOneInput = {
   drills: Drill[];
   terms: Pick<Term, 'createdAt' | 'status' | 'updatedAt'>[];
   milestones: Pick<Milestone, 'checklist'>[];
+  /** STAR stories (V2), listed by title when written in the range. */
+  stories?: { title: string; createdAt: number }[];
 };
 
 export function oneOnOne(i: OneOnOneInput): string {
@@ -72,6 +74,10 @@ export function oneOnOne(i: OneOnOneInput): string {
   // Career checklist
   const career = i.milestones.flatMap((m) => m.checklist.filter((c) => c.done && inRange(c.at)).map((c) => `- ${c.text} (${shortFmt.format(c.at!)})`));
   if (career.length) out.push('Career steps', ...career, '');
+
+  // Stories ready to tell (V2)
+  const stories = (i.stories ?? []).filter((s) => inRange(s.createdAt)).map((s) => `- ${s.title}`);
+  if (stories.length) out.push('Stories', ...stories, '');
 
   if (out.length === 2) out.push('Nothing recorded in these dates yet.', '');
   out.push('I want help with', '- ');

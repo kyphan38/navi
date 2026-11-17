@@ -103,7 +103,7 @@ function roundRules(level: DrillLevel): string {
 - ${kindRule(level)}`;
 }
 
-export function buildStartPrompt(p: Profile, type: DrillType, level: DrillLevel, topic: string): string {
+export function buildStartPrompt(p: Profile, type: DrillType, level: DrillLevel, topic: string, scenario = ''): string {
   const spec = DRILLS[type];
   return `${PLAIN_ENGLISH}
 ${SAFE_DATA}
@@ -114,7 +114,7 @@ ${aboutLearner(p)}
 Drill type: ${type}. ${spec.brief}
 Level: ${level}. Total rounds: ${ROUNDS[level]}.
 Topic: ${topic}.
-
+${scenario ? `\nBase the story on this real problem the learner met at work (keep its shape, change names and numbers):\n${scenario}\n` : ''}
 First decide the hidden story, then write round 1. The learner never sees the hidden parts.
 
 Return JSON:

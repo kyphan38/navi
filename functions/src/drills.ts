@@ -40,29 +40,38 @@ async function writeIfSame(ref: DocumentReference, data: Record<string, unknown>
   }
 }
 
-/** New drill: hidden story + round 1. Drops any drill still active. */
-export const drillStart = onCall(OPTS, async (req) => {
-  const uid = guard(req.auth);
-  const { type, level, topic: rawTopic } = (req.data ?? {}) as Record<string, unknown>;
-  if (!isDrillType(type)) throw new HttpsError('invalid-argument', 'Unknown drill type');
+/** What a new drill is built from. `scenario`: a real problem (Ask a senior). `redoOf`: the low-score drill it redoes. */
+export type StartInput = { type: DrillType; level: DrillLevel; topic?: string; scenario?: string; redoOf?: string; fromAsk?: string };
+
+/** Checks the level is open for this type (from the learner's done drills). */
+async function assertOpen(uid: string, type: DrillType, lvl: DrillLevel): Promise<void> {
+  if (lvl === 'easy') return;
+  // Two equality filters need no composite index; sort here.
+  const past = await getFirestore().collection(`users/${uid}/drills`).where('type', '==', type).where('status', '==', 'done').get();
+  const done = past.docs
+    .map((d) => d.data() as { level: DrillLevel; score: Record<string, number | null> | null; doneAt: number | null })
+    .sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0));
+  if (!openLevels(done).includes(lvl)) throw new HttpsError('failed-precondition', 'Level not open yet');
+}
+
+/** Highest level open for this type. */
+export async function highestOpen(uid: string, type: DrillType): Promise<DrillLevel> {
+  const past = await getFirestore().collection(`users/${uid}/drills`).where('type', '==', type).where('status', '==', 'done').get();
+  const done = past.docs.map((d) => d.data() as { level: DrillLevel; score: Record<string, number | null> | null; doneAt: number | null });
+  const open = openLevels(done).filter((l) => (DRILLS[type].levels as readonly string[]).includes(l));
+  return open[open.length - 1] ?? 'easy';
+}
+
+/** Writes the hidden story and round 1; drops any drill still active. Returns the new id. */
+export async function startDrill(uid: string, input: StartInput): Promise<string> {
+  const { type, level: lvl } = input;
   const spec = DRILLS[type];
-  if (typeof level !== 'string' || !(spec.levels as readonly string[]).includes(level)) throw new HttpsError('invalid-argument', 'Unknown level');
-  const lvl = level as DrillLevel;
-  if (lvl !== 'easy') {
-    // Two equality filters need no composite index; sort here.
-    const past = await getFirestore().collection(`users/${uid}/drills`).where('type', '==', type).where('status', '==', 'done').get();
-    const done = past.docs
-      .map((d) => d.data() as { level: DrillLevel; score: Record<string, number | null> | null; doneAt: number | null })
-      .sort((a, b) => (b.doneAt ?? 0) - (a.doneAt ?? 0));
-    if (!openLevels(done).includes(lvl)) throw new HttpsError('failed-precondition', 'Level not open yet');
-  }
-  const topic =
-    typeof rawTopic === 'string' && rawTopic.trim()
-      ? rawTopic.trim().slice(0, 200)
-      : spec.topics[Math.floor(Math.random() * spec.topics.length)];
+  await assertOpen(uid, type, lvl);
+  const topic = input.topic?.trim() ? input.topic.trim().slice(0, 200) : spec.topics[Math.floor(Math.random() * spec.topics.length)];
+  const scenario = (input.scenario ?? '').trim().slice(0, 2000);
 
   const profile = await loadProfile(uid);
-  const res = await ask(buildStartPrompt(profile, type, lvl, topic), START_SCHEMA, parseStart, () => fakeStart(type, lvl), {
+  const res = await ask(buildStartPrompt(profile, type, lvl, topic, scenario), START_SCHEMA, parseStart, () => fakeStart(type, lvl), {
     model: GEMINI_MODEL_START.value(),
     thinking: thinkingOf(GEMINI_THINKING_START.value()),
     temperature: 0.9,
@@ -90,6 +99,8 @@ export const drillStart = onCall(OPTS, async (req) => {
     seniorPath: null,
     whatIf: [],
     newTerms: [],
+    ...(input.redoOf ? { redoOf: input.redoOf } : {}),
+    ...(input.fromAsk ? { fromAsk: input.fromAsk } : {}),
     startedAt: now,
     doneAt: null,
   });
@@ -100,7 +111,26 @@ export const drillStart = onCall(OPTS, async (req) => {
     outline: res.outline,
   });
   await batch.commit();
-  return { id: ref.id };
+  return ref.id;
+}
+
+const ID = /^[A-Za-z0-9]{1,40}$/;
+
+/** New drill: hidden story + round 1. Drops any drill still active. `redoOf` marks a redo (V5). */
+export const drillStart = onCall(OPTS, async (req) => {
+  const uid = guard(req.auth);
+  const { type, level, topic, redoOf } = (req.data ?? {}) as Record<string, unknown>;
+  if (!isDrillType(type)) throw new HttpsError('invalid-argument', 'Unknown drill type');
+  const spec = DRILLS[type];
+  if (typeof level !== 'string' || !(spec.levels as readonly string[]).includes(level)) throw new HttpsError('invalid-argument', 'Unknown level');
+  if (redoOf !== undefined && (typeof redoOf !== 'string' || !ID.test(redoOf))) throw new HttpsError('invalid-argument', 'Bad drill id');
+  const id = await startDrill(uid, {
+    type,
+    level: level as DrillLevel,
+    topic: typeof topic === 'string' ? topic : undefined,
+    redoOf: redoOf as string | undefined,
+  });
+  return { id };
 });
 
 /** Saves the answer to the last round; returns `done` when it was the last one. */

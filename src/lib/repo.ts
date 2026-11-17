@@ -127,7 +127,7 @@ export function addCourse(uid: string, c: Omit<Course, 'createdAt' | 'updatedAt'
   return ref.id;
 }
 
-export function updateCourse(uid: string, id: string, patch: Partial<Pick<Course, 'modules' | 'deadline' | 'status'>>): void {
+export function updateCourse(uid: string, id: string, patch: Partial<Pick<Course, 'modules' | 'deadline' | 'status' | 'share'>>): void {
   void updateDoc(doc(coursesCol(uid), id), { ...patch, updatedAt: Date.now() }).catch((err) => console.warn('[repo] update course', err));
 }
 
@@ -265,6 +265,21 @@ export function watchMistakes(uid: string, cb: (items: MistakeDoc[]) => void): (
     (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Mistake) }))),
     (err) => console.warn('[repo] mistakes', err),
   );
+}
+
+/** A wrong exam-practice answer (V4) joins the review queue, due now. */
+export function addMistake(uid: string, m: Pick<Mistake, 'drillId' | 'skillId' | 'text' | 'lesson'>): void {
+  const now = Date.now();
+  void setDoc(doc(mistakesCol(uid)), {
+    drillId: m.drillId.slice(0, 100),
+    skillId: m.skillId,
+    text: m.text.slice(0, 1000),
+    lesson: m.lesson.slice(0, 1000),
+    box: 1,
+    // A minute back: Today's clock moves by the minute, so "now" would wait for the next one.
+    nextReviewAt: now - 60_000,
+    createdAt: now,
+  }).catch((err) => console.warn('[repo] add mistake', err));
 }
 
 export function updateMistake(uid: string, id: string, patch: Pick<Mistake, 'box' | 'nextReviewAt'>): void {

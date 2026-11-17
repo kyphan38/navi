@@ -24,6 +24,7 @@ const BLOCKS: Block[] = [
       'Some rounds give choices, some ask you to put steps in order, some take free text.',
       'At the end you get scores, notes from a coach, and your path next to a senior\'s path.',
       'Mistakes and new terms from a drill go to review.',
+      'A drill under 60% comes back after 2 weeks as "redo" on Today, one level up when that level is open. The new debrief shows your old score next to the new one.',
     ],
   },
   {
@@ -41,6 +42,9 @@ const BLOCKS: Block[] = [
       'Each week, look back and set the hours. navi plans about 70% of what you really did, so the plan stays real.',
       'Being late moves the finish date. Old work never piles onto next week.',
       'Tick a module when it is done.',
+      'practice next to a module: 5 exam-style questions. Check shows the right answers and why; wrong ones go to review.',
+      'Several courses can run at once. In the week plan, set the % of your hours for each course. Each course shows its own finish date.',
+      'add a course at the bottom starts another one.',
       'A month review shows here on the 1st of each month.',
     ],
   },
@@ -58,13 +62,26 @@ const BLOCKS: Block[] = [
       'Levels 1 to 4 for each skill come from evidence. 1: finish a module on it. 2: a demo, or a medium drill at 70% or more. 3: a note that you used it at work. 4: teach it to a junior.',
       'teach it to a junior: the AI plays a junior and asks 3 questions, then grades you.',
       'The slider shows how the dates move with more or fewer hours a week.',
-      '1:1 prep: notes for a date range, ready to copy before a meeting with your manager.',
+      '1:1 prep: notes for a date range, ready to copy before a meeting with your manager. Your stories are listed too.',
+      'target role: type the role you want (for example Senior DevOps). AI picks the skills and levels it needs; change the levels, then save. The Map then shows how ready you are, what is missing, thin evidence, and what to learn next.',
+      'stories: STAR stories (situation, task, action, result) for 1:1s and interviews. Write one yourself, or let AI draft one from a finished drill or a "used at work" note, then edit it.',
+      'brag doc: pick a quarter and write. AI makes one page for your review, only from what the app recorded. Copy it or download it as .md.',
+    ],
+  },
+  {
+    title: 'interview',
+    lines: [
+      'A mock interview: troubleshooting, system design or behavioral.',
+      '5 questions, one at a time. After an answer, the interviewer may ask one follow-up.',
+      'At the end you get a score per question, a better answer for each, and 2-3 things to practise.',
+      'Behavioral questions use your saved stories.',
     ],
   },
   {
     title: 'ask',
     lines: [
       'Send a real work problem and see how a senior would think about it.',
+      'practice this under an answer turns the problem into a drill. AI picks the best drill type, at your highest open level.',
       'Remove internal data first: IPs, hosts, keys, ARNs and emails. navi refuses them.',
     ],
   },
@@ -73,6 +90,7 @@ const BLOCKS: Block[] = [
     lines: [
       'A weekly digest (up to 5 items) and one public postmortem, made every Sunday morning.',
       'get this week makes it now. Every link was opened and checked before it was saved.',
+      'save under an item keeps it, with one line on what you take from it. Saved items sit at the top; mark them read when done.',
     ],
   },
   {

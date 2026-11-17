@@ -16,6 +16,7 @@ import { useStartDrill } from '@/hooks/useStartDrill';
 import { useTick } from '@/hooks/useTick';
 import { dayOf, parseDay } from '@/lib/day';
 import { scorePercent, todayDrill, topicForDay, typeLabel } from '@/lib/drills';
+import { redoPick } from '@/lib/redo';
 import { dueItems } from '@/lib/leitner';
 import { todayModules } from '@/lib/plan';
 
@@ -42,14 +43,17 @@ export default function TodayView() {
   const pick = day && drills ? todayDrill(day, drills) : null;
   const terms = useTerms();
   const now = useNow();
+  // A low-score drill from two weeks ago, to try again (V5).
+  const redo = drills && now && pick?.state !== 'active' ? redoPick(drills, now) : null;
   const mistakes = useMistakes();
   // Review shows once anything is in review; done = nothing due right now. At most 5 a day.
   const inReview = (terms ?? []).some((t) => t.status === 'learning') || (mistakes ?? []).some((m) => m.nextReviewAt !== null);
   const due = terms && mistakes && now ? dueItems([...terms, ...mistakes], now).length : 0;
   const learning = useLearning();
-  const { course, week, todayDoc } = learning;
-  const tick = useTick(course, day, todayDoc);
-  const planned = course && week ? course.modules.filter((m) => week.plan.moduleIds.includes(m.id)) : [];
+  const { course, courses, week, todayDoc } = learning;
+  const tick = useTick(courses, day, todayDoc);
+  // Planned modules of every running course (V6), in course order.
+  const planned = week ? courses.flatMap((c) => c.modules.filter((m) => week.plan.moduleIds.includes(m.id))) : [];
   const mods = day ? todayModules(planned, day, new Set(todayDoc?.moduleIds ?? [])) : [];
   const learnDone = mods.length > 0 && mods.every((m) => m.doneAt !== null);
   const topic = day && week ? topicForDay(day, week.plan.drillTopics) : undefined;
@@ -109,6 +113,22 @@ export default function TodayView() {
                 <span className="text-muted transition-colors group-hover:text-ink">{pick.drill.topic}</span>
                 <span className="font-mono text-[12px] text-faint tabular-nums">{scorePercent(pick.drill.score) ?? '-'}%</span>
               </Link>
+            )}
+            {redo && !busy && (
+              <span className="mt-1 flex flex-wrap items-baseline gap-x-3">
+                <span className="font-mono text-[12px] text-faint">redo</span>
+                <span className="text-muted">{redo.drill.topic}</span>
+                <span className="font-mono text-[12px] text-faint">
+                  {scorePercent(redo.drill.score)}% · {redo.level}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void start(redo.drill.type, redo.level, redo.drill.topic, redo.drill.id)}
+                  className="text-faint transition-colors hover:text-ink"
+                >
+                  start
+                </button>
+              </span>
             )}
           </Stop>
           {inReview && (

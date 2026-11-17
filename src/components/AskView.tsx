@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 import { useUid } from '@/components/AuthGate';
 import PageHead from '@/components/PageHead';
+import PracticeAsk from '@/components/PracticeAsk';
 import Waiting from '@/components/Waiting';
 import { aiError, askSenior } from '@/lib/ai';
 import { findInternalData } from '@/lib/internal-data';
@@ -163,9 +164,12 @@ export default function AskView() {
                   <div className="mb-4 ml-1 border-l border-line-strong pl-4 pt-1">
                     <p className="mb-4 whitespace-pre-wrap text-[14px] text-faint">{a.question}</p>
                     <Answer a={a.answer} />
-                    <button type="button" onClick={() => deleteAsk(uid, a.id)} className="mt-5 font-mono text-[12px] text-faint hover:text-ink">
-                      delete
-                    </button>
+                    <div className="mt-5 flex items-baseline gap-5">
+                      <PracticeAsk askId={a.id} />
+                      <button type="button" onClick={() => deleteAsk(uid, a.id)} className="font-mono text-[12px] text-faint hover:text-ink">
+                        delete
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>

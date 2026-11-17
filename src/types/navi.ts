@@ -66,6 +66,8 @@ export type Drill = {
   evenBetter?: string[];       // ideas beyond a correct answer, given even at full score
   newTerms: string[];
   tagged?: boolean;            // skillIds were set by skillTag (may still be empty)
+  redoOf?: string;             // the low-score drill this one redoes (V5)
+  fromAsk?: string;            // the Ask a senior question it came from (V7)
   startedAt: number; doneAt: number | null;
 };
 
@@ -120,6 +122,7 @@ export type Course = {
   modules: CourseModule[];
   status: 'active' | 'paused' | 'done';
   taggedAt?: number;           // modules got skill ids (Map page, skillTag)
+  share?: number;              // % of weekly hours when several courses run (V6); missing = equal share
   createdAt: number; updatedAt: number;
 };
 
@@ -182,4 +185,31 @@ export type Ask = {
     firstSteps: string[];
   };
   createdAt: number;
+};
+
+// --- STAR stories (users/{uid}/stories/{id}) - V2 ---
+export type Story = {
+  title: string;
+  situation: string; task: string; action: string; result: string;
+  skillIds: string[];
+  source: 'drill' | 'work' | 'manual';
+  sourceId: string | null;     // drill id, or "skillId:at" for a work note
+  createdAt: number; updatedAt: number;
+};
+
+// --- Saved news (users/{uid}/saved/{id}) - V8 ---
+export type Saved = { title: string; url: string; source: string; why: string; note: string; readAt: number | null; createdAt: number };
+
+// --- Target role (users/{uid}/meta/role) - V10 ---
+export type TargetRole = { title: string; needs: { skillId: string; level: SkillLevel }[]; createdAt: number; updatedAt: number };
+
+// --- Mock interviews (users/{uid}/interviews/{id}) - V1, written by Functions ---
+export type InterviewKind = 'troubleshooting' | 'design' | 'behavioral';
+export type InterviewTurn = { q: string; a: string | null; followUp: boolean };
+export type Interview = {
+  kind: InterviewKind;
+  turns: InterviewTurn[];
+  status: 'active' | 'done';
+  feedback: { overall: string; questions: { score: number; note: string; better: string }[]; practise: string[] } | null;
+  createdAt: number; doneAt: number | null;
 };

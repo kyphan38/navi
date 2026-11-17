@@ -1,12 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useUid } from '@/components/AuthGate';
 import ExplainBack from '@/components/ExplainBack';
 import MapRoute, { type RouteStop } from '@/components/MapRoute';
 import MapWhatIf from '@/components/MapWhatIf';
 import OneOnOnePrep from '@/components/OneOnOnePrep';
+import BragDoc from '@/components/map/BragDoc';
+import Stories from '@/components/map/Stories';
+import TargetRole from '@/components/map/TargetRole';
+import { watchRole, watchStories, type StoryDoc } from '@/lib/repo-career';
+import type { TargetRole as TargetRoleData } from '@/types/navi';
 import PageHead from '@/components/PageHead';
 import Waiting from '@/components/Waiting';
 import { useMapData, type SkillView } from '@/hooks/useMapData';
@@ -137,14 +142,21 @@ export default function MapView() {
   const [hoursEdit, setHours] = useState<number | null>(null);
   const hours = hoursEdit ?? realHours;
   const [open, setOpen] = useState<string | null>(null);
+  const uid = useUid();
+  const [stories, setStories] = useState<StoryDoc[]>([]);
+  const [role, setRole] = useState<TargetRoleData | null>(null);
+  useEffect(() => watchStories(uid, setStories), [uid]);
+  useEffect(() => watchRole(uid, setRole), [uid]);
 
   if (!skills || !milestones || !days || !learning.ready || !now) return <main className="column" />;
 
   const levels = new Map(skills.map((s) => [s.id, s.computed]));
-  const modules = learning.course?.modules ?? [];
+  // Every running course (V6); a course milestone counts only its own course.
+  const modules = learning.courses.flatMap((c) => c.modules);
   const rough = !learning.budget.real;
   const info = milestones.map((m) => {
-    const left = minutesLeft(m, levels, m.courseId && m.courseId !== learning.course?.id ? [] : modules);
+    const own = m.courseId ? learning.courses.find((c) => c.id === m.courseId)?.modules ?? [] : modules;
+    const left = minutesLeft(m, levels, own);
     const done = isDone(m, left);
     return { m, left, done, date: m.kind === 'learning' && !done ? dateFor(left, hours, now) : null };
   });
@@ -206,10 +218,16 @@ export default function MapView() {
         ))}
       </section>
 
+      <TargetRole role={role} skills={skills} />
+
+      <Stories stories={stories} drills={drills ?? []} skills={skills} />
+
       <section className="mt-10">
         <SectionTitle>1:1 prep</SectionTitle>
-        <OneOnOnePrep course={learning.course} days={days} skills={skills} drills={drills ?? []} milestones={milestones} />
+        <OneOnOnePrep courses={learning.courses} stories={stories} days={days} skills={skills} drills={drills ?? []} milestones={milestones} />
       </section>
+
+      <BragDoc courses={learning.courses} skills={skills} drills={drills ?? []} milestones={milestones} stories={stories} />
     </main>
   );
 }

@@ -11,8 +11,9 @@ import { watchCourses, watchDaysSince, watchWeeks, type CourseDoc, type DayDoc, 
 const noop = () => () => {};
 
 /**
- * Everything the course plan needs: today, the active course, all weeks, the
- * last 5 weeks of days, and the weekly budget. `ready` is false while loading.
+ * Everything the course plan needs: today, the running courses (`courses`; `course`
+ * is the first, for pages that show one), all weeks, the last 5 weeks of days,
+ * and the weekly budget. `ready` is false while loading.
  */
 export function useLearning() {
   const uid = useUid();
@@ -29,7 +30,9 @@ export function useLearning() {
   useEffect(() => (since ? watchDaysSince(uid, since, setDays) : undefined), [uid, since]);
 
   return useMemo(() => {
-    const course = courses?.find((c) => c.status !== 'done') ?? null;
+    // Several courses can run at once (V6); newest-first order from the snapshot is kept.
+    const running = (courses ?? []).filter((c) => c.status !== 'done');
+    const course = running[0] ?? null;
     const weekId = today ? weekOf(today) : '';
     const week = weeks?.find((w) => w.id === weekId) ?? null;
     const budget =
@@ -41,6 +44,7 @@ export function useLearning() {
       ready: !!today && courses !== null && weeks !== null && days !== null,
       today,
       course,
+      courses: running,
       weekId,
       week,
       weeks: weeks ?? [],

@@ -126,3 +126,14 @@ test('parseSplit clamps minutes and drops empty titles', async () => {
   const ms = parseSplit(JSON.stringify({ modules: [{ section: '', title: 'A', minutes: 9999, kind: 'video', doneWhen: '' }, { title: '' }] }));
   assert.deepEqual(ms, [{ section: 'Course', title: 'A', minutes: 600, kind: 'lesson', doneWhen: '' }]);
 });
+
+test('courseShares: equal by default, your % when set, always adds up to 1', async () => {
+  const { courseShares } = await import('@/lib/plan');
+  const r = (m: Map<string, number>) => Object.fromEntries([...m].map(([k, v]) => [k, Math.round(v * 100)]));
+  assert.deepEqual(r(courseShares([{ id: 'a' }, { id: 'b' }])), { a: 50, b: 50 });
+  assert.deepEqual(r(courseShares([{ id: 'a', share: 70 }, { id: 'b' }])), { a: 70, b: 30 });
+  assert.deepEqual(r(courseShares([{ id: 'a', share: 60 }, { id: 'b', share: 60 }])), { a: 50, b: 50 });
+  assert.deepEqual(r(courseShares([{ id: 'a', share: 0 }, { id: 'b', share: 0 }])), { a: 50, b: 50 });
+  assert.deepEqual(r(courseShares([{ id: 'a' }])), { a: 100 });
+  assert.equal(courseShares([]).size, 0);
+});

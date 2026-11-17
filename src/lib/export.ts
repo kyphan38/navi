@@ -17,6 +17,9 @@ export const EXPORT_COLLECTIONS = [
   'digests',
   'months',
   'asks',
+  'stories',
+  'saved',
+  'interviews',
 ] as const;
 
 export type ExportCollection = (typeof EXPORT_COLLECTIONS)[number];
