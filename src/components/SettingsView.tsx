@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
 
+import AiCostRow from '@/components/AiCostRow';
 import { useUid } from '@/components/AuthGate';
 import PageHead from '@/components/PageHead';
 import { useAuth } from '@/contexts/AuthContext';
@@ -150,6 +151,11 @@ export default function SettingsView() {
             ))}
           </div>
         </Row>
+      </section>
+
+      <section className="mt-10 text-[15px]">
+        <SectionTitle>ai cost</SectionTitle>
+        <AiCostRow />
       </section>
 
       <section className="mt-10 text-[15px]">
