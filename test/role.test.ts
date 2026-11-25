@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { learnNext, roleGaps, roleReadiness } from '@/lib/role';
+import { focusSkills, learnNext, roleGaps, roleReadiness } from '@/lib/role';
 import type { Evidence } from '@/types/navi';
 
 const ev = (kind: Evidence['kind'], level: Evidence['level'] = 2): Evidence => ({ level, kind, ref: null, note: '', at: 0 });
@@ -30,4 +30,21 @@ test('roleGaps: biggest gap first, thin evidence marked', () => {
   assert.deepEqual(learnNext(gaps).map((g) => g.id), ['k8s', 'gone', 'iam']);
   assert.equal(roleReadiness(gaps), Math.round((100 * (1 + 0 + 2 + 3)) / 11));
   assert.equal(roleReadiness([]), 0);
+});
+
+test('focusSkills: skills below the needed level, biggest gap first, at most 5', () => {
+  const skills = [
+    { id: 'a', name: 'A', level: 1 },
+    { id: 'b', name: 'B', level: 3 },
+    { id: 'c', name: 'C', level: 0 },
+  ];
+  const needs = [
+    { skillId: 'a', level: 2 },
+    { skillId: 'b', level: 3 },
+    { skillId: 'c', level: 3 },
+    { skillId: 'gone', level: 2 },
+  ];
+  assert.deepEqual(focusSkills(needs, skills), ['C', 'A']);
+  const many = Array.from({ length: 8 }, (_, i) => ({ id: `s${i}`, name: `S${i}`, level: 0 }));
+  assert.equal(focusSkills(many.map((m) => ({ skillId: m.id, level: 2 })), many).length, 5);
 });

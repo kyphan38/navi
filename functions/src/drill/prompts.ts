@@ -114,6 +114,7 @@ ${aboutLearner(p)}
 Drill type: ${type}. ${spec.brief}
 Level: ${level}. Total rounds: ${ROUNDS[level]}.
 Topic: ${topic}.
+If the topic does not fit the learner's usual setting (for example Kubernetes, GPUs or model serving), set the story where it fits, as close to their work as makes sense.
 ${scenario ? `\nBase the story on this real problem the learner met at work (keep its shape, change names and numbers):\n${scenario}\n` : ''}
 First decide the hidden story, then write round 1. The learner never sees the hidden parts.
 

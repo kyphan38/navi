@@ -74,6 +74,14 @@ test('topicForDay rotates through the week topics', () => {
   assert.ok(a && b && a !== b);
 });
 
+test('topicForDay mixes course topics and focus skills', () => {
+  assert.equal(topicForDay('2026-11-13', [], []), undefined);
+  const seen = new Set<string | undefined>();
+  for (let i = 0; i < 6; i++) seen.add(topicForDay(addDays('2026-11-13', i), ['c1', 'c2'], ['f1']));
+  assert.deepEqual([...seen].sort(), ['c1', 'c2', 'f1']);
+  assert.equal(topicForDay('2026-11-13', [], ['f1']), 'f1');
+});
+
 import { openLevels as serverOpenLevels } from '../functions/src/drill/catalog.ts';
 import { DRILL_TYPES, GROUPS, openLevels, typeForDay, unlockProgress } from '@/lib/drills';
 import { addDays, parseDay } from '@/lib/day';

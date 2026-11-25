@@ -41,14 +41,19 @@ Mix technical steps with people steps: who to tell, what to say, when to roll ba
       'IAM role lost a permission after a policy change',
       'NAT gateway limit reached',
       'duplicate payments after a client retry',
+      'pods stuck in CrashLoopBackOff after a config change',
+      'nodes under memory pressure evict pods',
+      'GPU node drops out with an Xid error',
+      'model server latency (TTFT) jumps after a deploy',
     ],
   },
   'security-review': {
     group: 'tech',
     levels: LEVELS,
-    brief: `A security review. Show a short Terraform or IAM policy snippet (10-30 lines) in a fenced code block.
-It has 2-4 real problems (misconfiguration or too much access). Each round asks the learner to find,
-rank or fix the problems, and to explain the risk for a payment system.`,
+    brief: `A security and config review, like a pull request review. Show a short snippet (10-30 lines) in a fenced
+code block: Terraform, an IAM policy, a Kubernetes manifest, a Dockerfile or a CI workflow, as the topic says.
+It has 2-4 real problems (misconfiguration, too much access, missing limits). Each round asks the learner to find,
+rank or fix the problems, and to explain the risk for the system.`,
     criteria: ['triage', 'hypothesis', 'safety', 'prevention'],
     topics: [
       'S3 bucket policy',
@@ -61,6 +66,11 @@ rank or fix the problems, and to explain the risk for a payment system.`,
       'cross-account access role',
       'secrets in environment variables',
       'public load balancer and WAF',
+      'Kubernetes Deployment without limits or probes',
+      'Dockerfile with a secret and an unpinned base image',
+      'GitHub Actions workflow with broad permissions',
+      'Helm values for a GPU model server',
+      'Kubernetes RBAC role for a team namespace',
     ],
   },
   'why-chain': {
@@ -95,13 +105,16 @@ There is no single right answer, but some reasons are much better than others.`,
       'blue-green or canary deploys',
       'build an internal tool or buy one',
       'strict change freeze or small safe changes before a holiday',
+      'sidecar or DaemonSet for a log agent',
+      'one shared cluster or a cluster per team',
+      'spot or on-demand GPUs for model serving',
     ],
   },
   logs: {
     group: 'tech',
     levels: LEVELS,
-    brief: `Read logs or metrics. Show a short log snippet or a small table of numbers (in a fenced code block)
-from a payment service. Each round asks what stands out, what it may mean and what to check next.
+    brief: `Read logs or metrics. Show a short log snippet, tool output or a small table of numbers
+(in a fenced code block) from the system in the topic. Each round asks what stands out, what it may mean and what to check next.
 Hide one real signal among normal noise.`,
     criteria: ['triage', 'hypothesis'],
     topics: [
@@ -111,12 +124,16 @@ Hide one real signal among normal noise.`,
       'error rates per endpoint over one hour',
       'latency percentiles p50, p95, p99',
       'a queue depth that keeps growing',
+      'kubectl describe and events of a failing pod',
+      'iostat and vmstat on a slow host',
+      'nvidia-smi output on a busy GPU node',
+      'model server metrics: TTFT, tokens per second, queue size',
     ],
   },
   cost: {
     group: 'tech',
     levels: LEVELS,
-    brief: `A cloud cost problem. The AWS bill for the payment platform went up. Show a short cost table.
+    brief: `A cloud cost problem. The cloud bill went up (the topic says where). Show a short cost table.
 Each round asks the learner where to look, what likely caused it, and how to bring it down safely
 without hurting reliability or security.`,
     criteria: ['triage', 'hypothesis', 'prevention'],
@@ -127,6 +144,46 @@ without hurting reliability or security.`,
       'S3 storage grew with old versions',
       'too many on-demand instances at night',
       'cross-region data transfer',
+      'GPU nodes idle at night and on weekends',
+      'Kubernetes requests far above real use',
+    ],
+  },
+  capacity: {
+    group: 'tech',
+    levels: LEVELS,
+    brief: `A capacity estimate, done by hand like in a design interview. Give a goal and a few numbers
+(traffic, model size, data size, hardware). Each round asks for one step: what limits the system,
+a rough number with the math shown in one or two lines, how much headroom to keep, and what to measure to check it.
+Round numbers are fine. Judge the method and the order of size (within about 2x), not exact digits.
+Put the right numbers and formulas in the hidden truth.`,
+    criteria: ['hypothesis', 'safety', 'comms'],
+    topics: [
+      'GPU memory for a 7B model: weights plus KV cache',
+      'how many GPUs to serve a 70B model at a target load',
+      'is this model server limited by compute or by memory bandwidth',
+      'size Kubernetes nodes for a set of services',
+      'database IOPS and storage for a year of growth',
+      'peak payments per second on a sale day',
+      'network bandwidth to load model weights on many nodes',
+    ],
+  },
+  'failure-mode': {
+    group: 'tech',
+    levels: LEVELS,
+    brief: `A failure-mode drill: think before it breaks. Describe a working system in a few lines (the parts and how
+they talk). Then one single fault happens. Each round asks: what breaks first, what breaks next (the chain),
+how big the blast radius is (who and what is hit), what alerts would show it, and what design change limits it.
+The hidden truth holds the real chain of events in order.`,
+    criteria: ['triage', 'hypothesis', 'safety', 'prevention'],
+    topics: [
+      'cluster DNS (CoreDNS) gets slow',
+      'one availability zone goes down',
+      'etcd loses quorum',
+      'a shared Redis cache is full',
+      'the certificate authority for internal TLS expires',
+      'a GPU node fails during a multi-GPU job',
+      'the container registry is down during a deploy',
+      'a config service returns empty values',
     ],
   },
   // ---------------------------------------------------------------- ai

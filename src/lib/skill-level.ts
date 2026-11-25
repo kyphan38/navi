@@ -46,7 +46,27 @@ export const SKILL_CATALOG: readonly { id: string; name: string; area: string }[
   { id: 'status-updates', name: 'Status updates', area: 'Communication' },
   { id: 'postmortems', name: 'Writing postmortems', area: 'Communication' },
   { id: 'ai-tools', name: 'Using AI tools safely', area: 'AI' },
+  // Next steps on the path: DevOps -> Platform -> AI infra.
+  { id: 'failure-modes', name: 'Failure modes and blast radius', area: 'Reliability' },
+  { id: 'linux-perf', name: 'Linux performance (CPU, memory, disk, network)', area: 'Platform' },
+  { id: 'k8s-core', name: 'Kubernetes core (pods, scheduling, resources)', area: 'Platform' },
+  { id: 'k8s-networking', name: 'Kubernetes networking (Service, Ingress, CNI)', area: 'Platform' },
+  { id: 'gitops', name: 'Helm and GitOps', area: 'Platform' },
+  { id: 'multi-tenancy', name: 'Multi-tenancy and RBAC', area: 'Platform' },
+  { id: 'observability', name: 'Observability (Prometheus, OpenTelemetry)', area: 'Platform' },
+  { id: 'golden-paths', name: 'Internal platform and golden paths', area: 'Platform' },
+  { id: 'gpu-basics', name: 'GPU basics (memory, bandwidth, nvidia-smi)', area: 'AI infra' },
+  { id: 'gpu-k8s', name: 'GPUs on Kubernetes', area: 'AI infra' },
+  { id: 'llm-serving', name: 'LLM serving (vLLM, batching, KV cache)', area: 'AI infra' },
+  { id: 'gpu-capacity', name: 'GPU capacity and cost planning', area: 'AI infra' },
+  { id: 'distributed-gpu', name: 'Multi-GPU work (NCCL, parallelism)', area: 'AI infra' },
 ];
+
+/** Starter skills the learner does not have yet (none of the same id). */
+export function missingStarters(have: readonly { id: string }[]): { id: string; name: string; area: string }[] {
+  const ids = new Set(have.map((s) => s.id));
+  return SKILL_CATALOG.filter((s) => !ids.has(s.id));
+}
 
 /** Evidence from done modules and good drills, for one skill. */
 export function derivedEvidence(skillId: string, modules: CourseModule[], drills: (Drill & { id: string })[]): Evidence[] {

@@ -142,6 +142,7 @@ export type Skill = {
 export type DrillGroup = 'tech' | 'ai' | 'comms' | 'business' | 'writing';
 export type DrillType =
   | 'incident' | 'security-review' | 'why-chain' | 'tradeoff' | 'logs' | 'cost'        // tech
+  | 'capacity' | 'failure-mode'                                                        // tech (added 2026-11-25)
   | 'review-ai-output' | 'brief-an-agent' | 'use-ai-or-not'                            // ai
   | 'three-audiences' | 'say-no' | 'clarify' | 'feedback' | 'status-update'           // comms
   | 'payment-case' | 'business-impact'                                                 // business
@@ -376,6 +377,8 @@ Lên hard tương tự từ medium. Người dùng luôn có thể chọn mức 
 | writing | `postmortem` | Viết postmortem ngắn từ một sự cố |
 | | `cr-risk` | Viết phần rủi ro + rollback cho một Change Request |
 | | `prioritize` | 6 việc, chỉ đủ thời gian làm 3 |
+| tech (thêm 2026-11-25) | `capacity` | Ước lượng VRAM (weights + KV cache), số GPU, size node bằng tay |
+| | `failure-mode` | Hệ thống đang chạy, hỏng 1 phần: gì hỏng tiếp, blast radius, cách giới hạn |
 
 P1 chỉ làm `incident` + `security-review`. P5 làm các loại còn lại.
 
@@ -537,7 +540,9 @@ Trang `map` đủ 3 phần mục 9. `forecast.ts`.
 **Done:** unit test `skill-level.ts` và `forecast.ts`. Kéo thanh trượt đổi ngày ngay. Map đọc được ở 360px
 (lộ trình chuyển thành dọc nếu không vừa).
 Ghi chú khi làm:
-- 27 skill mặc định (`SKILL_CATALOG`), tạo một lần khi mở Map. Chưa sửa/thêm skill được (Để sau).
+- 27 skill mặc định (`SKILL_CATALOG`), tạo một lần khi mở Map. ~~Chưa sửa/thêm skill được (Để sau).~~
+  Đã làm 2026-11-25: sửa tên, đổi area, xóa, thêm skill tự đặt. Thêm 13 skill mặc định (area Platform, AI infra,
+  `failure-modes`); người dùng cũ bấm `add them` để thêm phần còn thiếu (không tự thêm, vì có thể họ đã xóa).
 - Bằng chứng từ module, demo, drill được tính lại mỗi lần từ dữ liệu; chỉ `work` và `explain` lưu trên skill.
 - `skillTag` (Flash) gắn skill cho module (một lần mỗi khóa, `taggedAt`) và drill đã xong (`tagged`).
   Thử 138 bài: 118 có skill, phần intro không có; khoảng 30 giây.
@@ -582,3 +587,5 @@ Ghi chú khi làm:
 - ~~Review hàng tháng~~ Đã làm 2026-11-15: function `monthlyReview` chạy 07:00 ngày 1, ghi `users/{uid}/months/{YYYY-MM}` (chỉ đọc ở client), hiện trên trang learn.
 - Link vào mora/logi để tính giờ học tự động: **không làm** (chủ app quyết định 2026-11-15, giờ học chỉ ở mora và logi).
 - Nhiều khóa học cùng lúc.
+- Hướng DevOps -> Platform -> AI infra (2026-11-25): chủ đề drill có thêm Kubernetes, GPU, model serving;
+  bài hôm nay xen kẽ chủ đề khóa học và skill target role còn thiếu (`focusSkills`).

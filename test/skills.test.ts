@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { CAREER_CHECKLIST, HOURS_PER_STEP, dateFor, defaultMilestones, isDone, minutesLeft, weeksEarlier } from '@/lib/forecast';
-import { SKILL_CATALOG, derivedEvidence, isNewLevel, levelOf } from '@/lib/skill-level';
+import { SKILL_CATALOG, derivedEvidence, isNewLevel, levelOf, missingStarters } from '@/lib/skill-level';
 import type { CourseModule, Drill, Evidence, Milestone, SkillLevel } from '@/types/navi';
 
 const DAY = 86_400_000;
@@ -83,4 +83,11 @@ test('dateFor and weeksEarlier: more hours, earlier date', () => {
   assert.equal(weeksEarlier(at5, at10), 5);
   assert.equal(dateFor(0, 5, 0), null);
   assert.equal(dateFor(100, 0, 0), null);
+});
+
+test('missingStarters lists only catalog skills the learner lacks', () => {
+  assert.equal(missingStarters([]).length, SKILL_CATALOG.length);
+  const have = SKILL_CATALOG.slice(1).map((s) => ({ id: s.id }));
+  assert.deepEqual(missingStarters([...have, { id: 'custom' }]).map((s) => s.id), [SKILL_CATALOG[0].id]);
+  assert.ok(SKILL_CATALOG.some((s) => s.area === 'Platform') && SKILL_CATALOG.some((s) => s.area === 'AI infra'));
 });

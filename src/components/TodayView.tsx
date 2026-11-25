@@ -8,6 +8,7 @@ import DayNote from '@/components/DayNote';
 import ModuleRow from '@/components/ModuleRow';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
+import { useFocusTopics } from '@/hooks/useFocusTopics';
 import { useLearning } from '@/hooks/useLearning';
 import { useNow } from '@/hooks/useNow';
 import { useMistakes } from '@/hooks/useMistakes';
@@ -56,7 +57,8 @@ export default function TodayView() {
   const planned = week ? courses.flatMap((c) => c.modules.filter((m) => week.plan.moduleIds.includes(m.id))) : [];
   const mods = day ? todayModules(planned, day, new Set(todayDoc?.moduleIds ?? [])) : [];
   const learnDone = mods.length > 0 && mods.every((m) => m.doneAt !== null);
-  const topic = day && week ? topicForDay(day, week.plan.drillTopics) : undefined;
+  const focus = useFocusTopics();
+  const topic = day ? topicForDay(day, week?.plan.drillTopics ?? [], focus) : undefined;
 
   return (
     <main className="column">

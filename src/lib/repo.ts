@@ -7,6 +7,7 @@
 
 import {
   arrayRemove,
+  addDoc,
   arrayUnion,
   collection,
   deleteDoc,
@@ -222,6 +223,21 @@ export function seedSkills(uid: string, list: readonly { id: string; name: strin
   const batch = writeBatch(getDb());
   for (const s of list) batch.set(doc(skillsCol(uid), s.id), { name: s.name, area: s.area, level: 0, evidence: [], createdAt: now, updatedAt: now });
   void batch.commit().catch((err) => console.warn('[repo] seed skills', err));
+}
+
+/** A skill the learner adds by hand. */
+export function addSkill(uid: string, name: string, area: string): void {
+  const now = Date.now();
+  void addDoc(skillsCol(uid), { name, area, level: 0, evidence: [], createdAt: now, updatedAt: now }).catch((err) => console.warn('[repo] add skill', err));
+}
+
+export function updateSkill(uid: string, id: string, patch: Pick<Skill, 'name' | 'area'>): void {
+  void updateDoc(doc(skillsCol(uid), id), { ...patch, updatedAt: Date.now() }).catch((err) => console.warn('[repo] update skill', err));
+}
+
+/** Drops the skill and its stored evidence; tags on modules and drills simply stop matching. */
+export function removeSkill(uid: string, id: string): void {
+  void deleteDoc(doc(skillsCol(uid), id)).catch((err) => console.warn('[repo] remove skill', err));
 }
 
 export function addSkillEvidence(uid: string, id: string, e: Evidence): void {

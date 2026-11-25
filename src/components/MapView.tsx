@@ -8,6 +8,7 @@ import MapRoute, { type RouteStop } from '@/components/MapRoute';
 import MapWhatIf from '@/components/MapWhatIf';
 import OneOnOnePrep from '@/components/OneOnOnePrep';
 import BragDoc from '@/components/map/BragDoc';
+import { SkillAdd, SkillEdit } from '@/components/map/SkillEdit';
 import Stories from '@/components/map/Stories';
 import TargetRole from '@/components/map/TargetRole';
 import { watchRole, watchStories, type StoryDoc } from '@/lib/repo-career';
@@ -40,7 +41,7 @@ function LevelCells({ level }: { level: SkillLevel }) {
   );
 }
 
-function SkillDetail({ s }: { s: SkillView }) {
+function SkillDetail({ s, areas }: { s: SkillView; areas: string[] }) {
   const uid = useUid();
   const now = useNow();
   const [work, setWork] = useState('');
@@ -93,6 +94,7 @@ function SkillDetail({ s }: { s: SkillView }) {
       </form>
 
       <ExplainBack skillId={s.id} skillName={s.name} />
+      <SkillEdit id={s.id} name={s.name} area={s.area} areas={areas} />
     </div>
   );
 }
@@ -169,6 +171,7 @@ export default function MapView() {
   }));
   const whatIf = info.filter((i) => i.m.kind === 'learning' && !i.done).map((i) => ({ id: i.m.id, title: i.m.title, left: i.left }));
   const atLevel = skills.filter((s) => s.computed > 0).length;
+  const areas = [...new Set(skills.map((s) => s.area))].sort();
 
   return (
     <main className="column md:max-w-[48rem]">
@@ -210,12 +213,13 @@ export default function MapView() {
                     {isNewLevel(s.reachedAt, now) && <span className="shrink-0 font-mono text-[11px] text-ink">new</span>}
                     <LevelCells level={s.computed} />
                   </button>
-                  {open === s.id && <SkillDetail s={s} />}
+                  {open === s.id && <SkillDetail s={s} areas={areas} />}
                 </li>
               ))}
             </ul>
           </div>
         ))}
+        <SkillAdd skills={skills} areas={areas} />
       </section>
 
       <TargetRole role={role} skills={skills} />

@@ -36,3 +36,19 @@ export function roleReadiness(gaps: Gap[]): number {
   const have = gaps.reduce((s, g) => s + Math.min(g.have, g.need), 0);
   return Math.round((100 * have) / need);
 }
+
+/**
+ * Names of the role's skills still below the level it needs, biggest gap first,
+ * at most 5. Uses the level cached on the skill (the Map keeps it in step).
+ */
+export function focusSkills(needs: { skillId: string; level: number }[], skills: { id: string; name: string; level: number }[]): string[] {
+  const byId = new Map(skills.map((s) => [s.id, s]));
+  return needs
+    .flatMap((n) => {
+      const s = byId.get(n.skillId);
+      return s && s.level < n.level ? [{ name: s.name, gap: n.level - s.level }] : [];
+    })
+    .sort((a, b) => b.gap - a.gap || a.name.localeCompare(b.name))
+    .slice(0, 5)
+    .map((g) => g.name);
+}

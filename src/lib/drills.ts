@@ -13,6 +13,8 @@ export const DRILL_TYPES: readonly { type: DrillType; group: DrillGroup; label: 
   { type: 'tradeoff', group: 'tech', label: 'trade-off', line: 'Pick an option and defend it.', levels: ALL },
   { type: 'logs', group: 'tech', label: 'logs', line: 'Find the signal in logs and numbers.', levels: ALL },
   { type: 'cost', group: 'tech', label: 'cost', line: 'The cloud bill went up. Why?', levels: ALL },
+  { type: 'capacity', group: 'tech', label: 'capacity', line: 'Estimate GPUs, memory or nodes by hand.', levels: ALL },
+  { type: 'failure-mode', group: 'tech', label: 'failure mode', line: 'One part fails. What breaks next?', levels: ALL },
   { type: 'review-ai-output', group: 'ai', label: 'review AI output', line: 'Find the mistakes in code an AI wrote.', levels: ALL },
   { type: 'brief-an-agent', group: 'ai', label: 'brief an agent', line: 'Write a clear, safe task for an AI agent.', levels: ALL },
   { type: 'use-ai-or-not', group: 'ai', label: 'use AI or not', line: 'AI, together, or by hand? Name the risk.', levels: ALL },
@@ -131,7 +133,7 @@ export function todayDrill(day: string, drills: (Drill & { id: string })[]): Tod
 
 /**
  * Which type a day gets (PLAN-navi.md 6.4): about half the days are tech
- * (rotating its 6 types), the others rotate the 4 other groups. Sunday is incident.
+ * (rotating its 8 types), the others rotate the 4 other groups. Sunday is incident.
  */
 export function typeForDay(day: string): DrillType {
   if (parseDay(day).getDay() === 0) return 'incident';
@@ -160,7 +162,15 @@ export function splitProse(text: string): { code: boolean; text: string }[] {
   return out;
 }
 
-/** Today's drill topic from this week's course modules, rotating by day; undefined = random. */
-export function topicForDay(day: string, topics: string[]): string | undefined {
-  return topics.length ? topics[dayNumber(day) % topics.length] : undefined;
+/**
+ * Today's drill topic, rotating by day: this week's course modules and the
+ * target role's weakest skills take turns. undefined = the server picks one.
+ */
+export function topicForDay(day: string, course: string[], focus: string[] = []): string | undefined {
+  const mixed: string[] = [];
+  for (let i = 0; i < Math.max(course.length, focus.length); i++) {
+    if (i < course.length) mixed.push(course[i]);
+    if (i < focus.length) mixed.push(focus[i]);
+  }
+  return mixed.length ? mixed[dayNumber(day) % mixed.length] : undefined;
 }
