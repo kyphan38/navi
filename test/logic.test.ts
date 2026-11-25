@@ -1,15 +1,25 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { PLACES, placeOf } from '@/lib/nav';
+import { PLACES, placeOf, subPagesOf } from '@/lib/nav';
 import { DEFAULT_PROFILE, normalizeProfile } from '@/lib/profile';
 
 test('placeOf maps paths with and without a trailing slash', () => {
   assert.equal(placeOf('/'), 'today');
-  assert.equal(placeOf('/drill'), 'drill');
-  assert.equal(placeOf('/drill/'), 'drill');
+  assert.equal(placeOf('/drill'), 'practice');
+  assert.equal(placeOf('/drill/play/'), 'practice');
+  assert.equal(placeOf('/review/'), 'practice');
+  assert.equal(placeOf('/terms/'), 'learn');
+  assert.equal(placeOf('/ask'), 'career');
   assert.equal(placeOf('/settings/'), 'settings');
   assert.equal(placeOf('/login/'), null);
+});
+
+test('six places; sub pages follow the open page', () => {
+  assert.equal(PLACES.length, 6);
+  assert.deepEqual(subPagesOf('/news').current, '/news/');
+  assert.deepEqual(subPagesOf('/news/').pages.map((p) => p.label), ['learn', 'terms', 'news']);
+  assert.deepEqual(subPagesOf('/map/').pages, []);
 });
 
 test('every place has a unique href', () => {

@@ -100,8 +100,7 @@ export default function Stories({ stories, drills, skills }: { stories: StoryDoc
   };
 
   return (
-    <section className="mt-12 text-[15px]">
-      <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">stories</h2>
+    <div className="text-[15px]">
       <ul>
         {stories.map((s) => (
           <li key={s.id}>
@@ -166,6 +165,6 @@ export default function Stories({ stories, drills, skills }: { stories: StoryDoc
           {error && <span className="text-[14px] text-muted">{error}</span>}
         </div>
       )}
-    </section>
+    </div>
   );
 }

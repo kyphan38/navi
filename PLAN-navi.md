@@ -91,7 +91,9 @@ Thêm `navi` vào `../sync-gemini-key.sh` và `../SECRETS.md`. Chủ app tự ch
 
 ### Nav
 
-`today · drill · learn · terms · map · settings`. Đặt ở **rail bên trái** trên màn hình rộng, hàng chữ trên cùng
+`today · practice · learn · map · career · settings` (gọn lại 2026-11-26, trước là 9 mục). `practice` = drill +
+interview + review, `learn` = khóa học + terms + news, `career` = target role + ask + stories + 1:1 prep + brag doc.
+Trang con chuyển bằng hàng chữ ở đầu trang (`PageHead`). URL cũ giữ nguyên. Đặt ở **rail bên trái** trên màn hình rộng, hàng chữ trên cùng
 ở màn hình hẹp (xem mục 1b). Không copy `TopBar` của hodi/fina/logi.
 
 | Trang | Nội dung | Phase |
@@ -595,3 +597,6 @@ Ghi chú khi làm:
   thông tin dạng tin nhắn chat; "practice this" dưới postmortem của tuần chạy lại sự cố thật thành bài `incident`
   (`drillFromPostmortem`).
 - Track (chặng tập trung một trụ cột, đóng khi đạt chuẩn) + heatmap lịch sử: xem `PLAN-track.md` (MVP xong 2026-11-25, thử trên emulator 2026-11-26).
+- Làm gọn UI (2026-11-26, chủ app duyệt mockup): nav 6 mục; Map chỉ còn route, track, skills (gập theo trụ cột),
+  history, còn "what if" và milestones mở bằng chữ dưới route; trang `career` mới; Drill: bài hôm nay + redo trên cùng,
+  mỗi nhóm một dòng tên bài, bấm mới mở; "to fix" và history gập.

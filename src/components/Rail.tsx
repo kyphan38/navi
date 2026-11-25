@@ -7,8 +7,8 @@ import { PLACES, placeOf } from '@/lib/nav';
 
 /**
  * navi's nav (PLAN-navi.md 1b). Wide screens: a left rail of mono words on a
- * route line, the current place is a filled dot. Phones: one row of words that
- * scrolls sideways, the current place has a dot in front.
+ * route line, the current place is a filled dot. Phones: one row of words (six fit
+ * at 375px), the current place has a dot in front.
  */
 export default function Rail() {
   const current = placeOf(usePathname());
@@ -43,7 +43,7 @@ export default function Rail() {
 
       <nav
         aria-label="Main"
-        className="sticky top-0 z-20 flex gap-5 overflow-x-auto bg-bg px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-2.5 font-mono text-[13px] [scrollbar-width:none] md:hidden"
+        className="sticky top-0 z-20 flex gap-3 overflow-x-auto bg-bg px-5 pt-[calc(env(safe-area-inset-top)+14px)] pb-2.5 font-mono text-[12px] [scrollbar-width:none] md:hidden"
       >
         {PLACES.map(({ place, href }) =>
           place === current ? (

@@ -1,30 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useSyncExternalStore, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import PageHead from '@/components/PageHead';
 import DayNote from '@/components/DayNote';
 import ModuleRow from '@/components/ModuleRow';
 import Waiting from '@/components/Waiting';
-import { useDrills } from '@/hooks/useDrills';
-import { useFocusTopics } from '@/hooks/useFocusTopics';
-import { useTrack } from '@/hooks/useTrack';
-import { useLearning } from '@/hooks/useLearning';
-import { useNow } from '@/hooks/useNow';
-import { useMistakes } from '@/hooks/useMistakes';
 import { useTerms } from '@/hooks/useTerms';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { useTick } from '@/hooks/useTick';
-import { dayOf, parseDay } from '@/lib/day';
-import { scorePercent, todayDrill, topicForDay, typeLabel } from '@/lib/drills';
-import { redoPick } from '@/lib/redo';
+import { useTodayDrill } from '@/hooks/useTodayDrill';
+import { parseDay } from '@/lib/day';
+import { scorePercent, typeLabel } from '@/lib/drills';
 import { dueItems } from '@/lib/leitner';
 import { todayModules } from '@/lib/plan';
-import { pillarIds, trackDrillPick } from '@/lib/track';
 
 const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-const noop = () => () => {};
 
 /** One stop on today's route: a dot (filled when done), a label, and the step. */
 function Stop({ done, label, children }: { done: boolean; label: string; children: ReactNode }) {
@@ -39,34 +31,18 @@ function Stop({ done, label, children }: { done: boolean; label: string; childre
 }
 
 export default function TodayView() {
-  // Read on the client only: the static build has no "today".
-  const day = useSyncExternalStore(noop, () => dayOf(Date.now()), () => '');
-  const drills = useDrills();
+  const { day, mistakes, now, learning, pick, redo, next, area } = useTodayDrill();
   const { start, busy, error } = useStartDrill();
-  const pick = day && drills ? todayDrill(day, drills) : null;
   const terms = useTerms();
-  const now = useNow();
-  // A low-score drill from two weeks ago, to try again (V5).
-  const mistakes = useMistakes();
-  const track = useTrack();
-  const pillar = drills && mistakes ? pillarIds(track.needIds, drills, mistakes) : null;
-  const redo = drills && now && pick?.state !== 'active' ? redoPick(drills, now, pillar?.drills) : null;
-  // A running track changes tech days only (PLAN-track.md 5).
-  const trackPick =
-    pick?.state === 'todo' && track.active && drills ? trackDrillPick(day, track.active.track, track.needIds, track.skills, drills, pick) : null;
   // Review shows once anything is in review; done = nothing due right now. At most 5 a day.
   const inReview = (terms ?? []).some((t) => t.status === 'learning') || (mistakes ?? []).some((m) => m.nextReviewAt !== null);
   const due = terms && mistakes && now ? dueItems([...terms, ...mistakes], now).length : 0;
-  const learning = useLearning();
   const { course, courses, week, todayDoc } = learning;
   const tick = useTick(courses, day, todayDoc);
   // Planned modules of every running course (V6), in course order.
   const planned = week ? courses.flatMap((c) => c.modules.filter((m) => week.plan.moduleIds.includes(m.id))) : [];
   const mods = day ? todayModules(planned, day, new Set(todayDoc?.moduleIds ?? [])) : [];
   const learnDone = mods.length > 0 && mods.every((m) => m.doneAt !== null);
-  const focus = useFocusTopics();
-  // Priority: track > target role > course.
-  const topic = trackPick?.topic ?? (day ? topicForDay(day, week?.plan.drillTopics ?? [], focus) : undefined);
 
   return (
     <main className="column">
@@ -97,19 +73,19 @@ export default function TodayView() {
             </Stop>
           )}
           <Stop done={pick.state === 'done'} label="drill">
-            {pick.state === 'todo' && (
+            {next && (
               <span className="inline-flex flex-wrap items-baseline gap-x-3">
                 <span className="text-ink">
-                  {typeLabel(trackPick?.type ?? pick.type)} <span className="font-mono text-[12px] text-faint">{trackPick?.level ?? pick.level}</span>
+                  {typeLabel(next.type)} <span className="font-mono text-[12px] text-faint">{next.level}</span>
                 </span>
-                {topic && <span className="min-w-0 text-[14px] text-faint">{topic}</span>}
-                {trackPick && track.active && <span className="font-mono text-[11px] text-faint">{track.active.track.area.toLowerCase()}</span>}
+                {next.topic && <span className="min-w-0 text-[14px] text-faint">{next.topic}</span>}
+                {area && <span className="font-mono text-[11px] text-faint">{area.toLowerCase()}</span>}
                 {busy ? (
                   <Waiting />
                 ) : (
                   <button
                     type="button"
-                    onClick={() => void start(trackPick?.type ?? pick.type, trackPick?.level ?? pick.level, topic, undefined, trackPick?.skillId)}
+                    onClick={() => void start(next.type, next.level, next.topic, undefined, next.skillId)}
                     className="text-faint transition-colors hover:text-ink"
                   >
                     start

@@ -71,8 +71,7 @@ export default function BragDoc(props: {
   };
 
   return (
-    <section className="mt-12 text-[15px]">
-      <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">brag doc</h2>
+    <div className="text-[15px]">
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
         {quarters.map((x) => (
           <button
@@ -121,6 +120,6 @@ export default function BragDoc(props: {
           </p>
         </div>
       )}
-    </section>
+    </div>
   );
 }

@@ -84,8 +84,7 @@ export default function TargetRole({ role, skills }: { role: Role | null; skills
   const next = learnNext(gaps);
 
   return (
-    <section className="mt-12 text-[15px]">
-      <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">target role</h2>
+    <div className="text-[15px]">
       {draft ? (
         <>
           <p className="text-ink">{draft.title}</p>
@@ -140,6 +139,6 @@ export default function TargetRole({ role, skills }: { role: Role | null; skills
           {error && <span className="text-[14px] text-muted">{error}</span>}
         </form>
       )}
-    </section>
+    </div>
   );
 }

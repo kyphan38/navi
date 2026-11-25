@@ -7,6 +7,13 @@ type Block = { title: string; lines: string[] };
 
 const BLOCKS: Block[] = [
   {
+    title: 'places',
+    lines: [
+      'Six places: today, practice, learn, map, career, settings.',
+      'practice holds drill, interview and review. learn holds your courses, terms and news. career holds your target role, ask a senior, stories, 1:1 prep and the brag doc. Switch between them with the words at the top of the page.',
+    ],
+  },
+  {
     title: 'today',
     lines: [
       'Today is a short route: learn, drill, review. A dot fills when a step is done.',
@@ -18,7 +25,9 @@ const BLOCKS: Block[] = [
     title: 'drill',
     lines: [
       'A drill is a short work scenario, like an incident or a hard message. You answer round by round.',
-      'Pick a group (tech, ai, comms, business, writing), a type and a level.',
+      'At the top: today\'s drill and a redo, the same as on Today.',
+      'Below, each group is one line of drill names. Tap a name to see what it is, pick a level and start.',
+      'to fix (your mistakes) and history are folded at the bottom. Tap to open.',
       'Easy has 3 rounds, medium has 4. Hard rounds show a 5 minute timer. Past zero it just says over.',
       'Medium opens after 3 easy drills in a row at 70% or more. Hard opens the same way after medium.',
       'Some rounds give choices, some ask you to put steps in order, some take free text.',
@@ -64,7 +73,8 @@ const BLOCKS: Block[] = [
   {
     title: 'map',
     lines: [
-      'The route from associate to senior, with you on it and dates for each milestone.',
+      'The route from associate to senior, with you on it and dates for each milestone. Under it, what if and milestones open with a tap.',
+      'Skills are folded by pillar. Tap a pillar to see its skills; other areas are in one "other" row.',
       'Levels 1 to 4 for each skill come from evidence. 1: finish a module on it. 2: a demo, or a medium drill at 70% or more. 3: a note that you used it at work. 4: teach it to a junior.',
       'teach it to a junior: the AI plays a junior and asks 3 questions, then grades you.',
       'Skills: open one and tap edit to rename it, move it to another area, or remove it. Add your own skills under the list. New starter skills can be added with one tap.',
@@ -75,11 +85,8 @@ const BLOCKS: Block[] = [
       'Used at work and teach are not needed to close a track. The summary marks those skills as work-verified.',
       'Close the track when it says ready, or earlier (it then says not met). After 4 weeks it shows late; the end date never moves. The summary compares before and after: levels, drill average, mistakes fixed, redo scores.',
       'history: the last 26 weeks. Light gray: you learned or reviewed. Dark gray: you did a drill or a mock interview. Tap a day to see what you did.',
-      'The slider shows how the dates move with more or fewer hours a week.',
-      '1:1 prep: notes for a date range, ready to copy before a meeting with your manager. Your stories are listed too.',
-      'target role: type the role you want (for example Senior DevOps). AI picks the skills and levels it needs; change the levels, then save. The Map then shows how ready you are, what is missing, thin evidence, and what to learn next. The drill topic on Today then takes turns between your course and the skills the role still needs.',
-      'stories: STAR stories (situation, task, action, result) for 1:1s and interviews. Write one yourself, or let AI draft one from a finished drill or a "used at work" note, then edit it.',
-      'brag doc: pick a quarter and write. AI makes one page for your review, only from what the app recorded. Copy it or download it as .md.',
+      'what if: the slider shows how the dates move with more or fewer hours a week.',
+
     ],
   },
   {
@@ -89,6 +96,16 @@ const BLOCKS: Block[] = [
       '5 questions, one at a time. After an answer, the interviewer may ask one follow-up.',
       'At the end you get a score per question, a better answer for each, and 2-3 things to practise.',
       'Behavioral questions use your saved stories.',
+    ],
+  },
+  {
+    title: 'career',
+    lines: [
+      'target role: type the role you want (for example Senior DevOps). AI picks the skills and levels it needs; change the levels, then save. Career then shows how ready you are, what is missing, thin evidence, and what to learn next. The drill topic on Today then takes turns between your course and the skills the role still needs.',
+      'stories: STAR stories (situation, task, action, result) for 1:1s and interviews. Write one yourself, or let AI draft one from a finished drill or a "used at work" note, then edit it.',
+      '1:1 prep: notes for a date range, ready to copy before a meeting with your manager. Your stories are listed too.',
+      'brag doc: pick a quarter and write. AI makes one page for your review, only from what the app recorded. Copy it or download it as .md.',
+      'Stories, 1:1 prep and the brag doc are folded. Tap one to open it.',
     ],
   },
   {
