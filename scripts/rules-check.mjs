@@ -10,7 +10,7 @@
 
 import { deleteApp, initializeApp } from 'firebase/app';
 import { GoogleAuthProvider, connectAuthEmulator, getAuth, signInWithCredential } from 'firebase/auth';
-import { addDoc, collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getFirestore, setDoc, setLogLevel } from 'firebase/firestore';
+import { addDoc, collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getFirestore, increment, setDoc, setLogLevel, updateDoc } from 'firebase/firestore';
 
 // Denied writes are expected here; the SDK would log each one as an error.
 setLogLevel('silent');
@@ -90,6 +90,17 @@ await expect('owner writes a day with reviews', true, () =>
 await expect('owner writes negative reviews', false, () =>
   setDoc(mine('days', '2000-01-02'), { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, reviews: -1, updatedAt: 1 }),
 );
+// Same writes as bumpDayReviews: a new day with defaults, then only the counter.
+await deleteDoc(mine('days', '2000-01-03')).catch(() => {});
+await expect('owner counts a review on a new day', true, () =>
+  setDoc(
+    mine('days', '2000-01-03'),
+    { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, reviews: increment(1), updatedAt: 1 },
+    { merge: true },
+  ),
+);
+await expect('owner counts a review on an existing day', true, () => updateDoc(mine('days', '2000-01-03'), { reviews: increment(1), updatedAt: 2 }));
+
 const track = {
   area: 'Cloud & security',
   rung: 'mid',

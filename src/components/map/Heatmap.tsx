@@ -26,7 +26,7 @@ export default function Heatmap({ days, drills, modules, today }: { days: DayDoc
 
   return (
     <div>
-      <div className="flex gap-[2px] overflow-x-auto" role="grid" aria-label="What you did each day, last 26 weeks">
+      <div className="-m-[3px] flex gap-[2px] overflow-x-auto p-[3px]" role="grid" aria-label="What you did each day, last 26 weeks">
         {weeks.map((w) => (
           <div key={w[0].day} className="flex flex-col gap-[2px]" role="row">
             {w.map((c) =>

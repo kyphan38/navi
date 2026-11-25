@@ -45,7 +45,8 @@ function Summary({ s }: { s: TrackSummary }) {
         ))}
       </ul>
       <p className="font-mono text-[12px] text-faint">
-        drills {s.drills.easy}/{s.drills.medium}/{s.drills.hard} easy/medium/hard · average {arrow(s.drillAvg.before, s.drillAvg.after)}
+        drills {s.drills.easy}/{s.drills.medium}/{s.drills.hard} easy/medium/hard
+        {(s.drillAvg.before !== null || s.drillAvg.after !== null) && ` · average ${arrow(s.drillAvg.before, s.drillAvg.after)}`}
       </p>
       <p className="font-mono text-[12px] text-faint">
         mistakes fixed {s.mistakesFixed} · new {s.mistakesNew}

@@ -594,4 +594,4 @@ Ghi chú khi làm:
 - Drill thật hơn (2026-11-25): vòng `command` trả output giả đúng lệnh vừa gõ (code block); `war-room` hiện
   thông tin dạng tin nhắn chat; "practice this" dưới postmortem của tuần chạy lại sự cố thật thành bài `incident`
   (`drillFromPostmortem`).
-- Track (chặng tập trung một trụ cột, đóng khi đạt chuẩn) + heatmap lịch sử: xem `PLAN-track.md` (MVP xong 2026-11-25, chưa test trên emulator).
+- Track (chặng tập trung một trụ cột, đóng khi đạt chuẩn) + heatmap lịch sử: xem `PLAN-track.md` (MVP xong 2026-11-25, thử trên emulator 2026-11-26).

@@ -7,8 +7,9 @@ Mục tiêu 1 năm: Middle -> Senior DevOps / Platform. Track là **một chặn
 
 MVP **không thêm lần gọi AI nào**. Mọi luật là code thuần, có unit test.
 
-**Trạng thái:** MVP code xong 2026-11-25 (bước 1-9 mục 8). Unit test, typecheck, lint qua. Chưa chạy `test:rules`
-và chưa thử trên emulator (máy cần Java 21).
+**Trạng thái:** MVP xong 2026-11-25 (bước 1-9 mục 8). Unit test, typecheck, lint, `test:rules` qua.
+Thử trên emulator 2026-11-26: bắt đầu Track, route, ô kiểm, bấm ô heatmap, đóng Track (not met) ra tổng kết, Map ở 375px.
+Chưa thử: một ngày có drill thật (ô đậm) và trang review có mục đến hạn (không có dữ liệu trong emulator).
 
 Ghi chú khi làm:
 - `watchDrills` tăng từ 60 lên 200 bài, để heatmap 26 tuần và luật 60 ngày đủ dữ liệu.
