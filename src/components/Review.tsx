@@ -1,22 +1,31 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useUid } from '@/components/AuthGate';
 import PageHead from '@/components/PageHead';
+import { useDrills } from '@/hooks/useDrills';
 import { useMistakes } from '@/hooks/useMistakes';
 import { useNow } from '@/hooks/useNow';
 import { useTerms } from '@/hooks/useTerms';
+import { useTrack } from '@/hooks/useTrack';
 import { dueItems, review } from '@/lib/leitner';
-import { updateMistake, updateTerm } from '@/lib/repo';
+import { dayOf } from '@/lib/day';
+import { bumpDayReviews, updateMistake, updateTerm, watchDaysSince } from '@/lib/repo';
 import { reviewPatch } from '@/lib/terms';
+import { pillarIds } from '@/lib/track';
 
 type Item = { kind: 'term' | 'mistake'; id: string; nextReviewAt: number | null };
 
-/** Due terms and mistakes together, oldest due first, at most 5 a day (PLAN-navi.md 10). */
-export function reviewQueue(terms: Item[], mistakes: Item[], now: number): Item[] {
-  return dueItems([...terms, ...mistakes], now, 5);
+/**
+ * Due terms and mistakes together, oldest due first, at most 5 a day (PLAN-navi.md 10).
+ * Mistakes in `first` (the running track's pillar) go before the rest.
+ */
+export function reviewQueue(terms: Item[], mistakes: Item[], now: number, first: Set<string> = new Set()): Item[] {
+  const due = dueItems([...terms, ...mistakes], now, Infinity);
+  const head = due.filter((i) => i.kind === 'mistake' && first.has(i.id));
+  return [...head, ...due.filter((i) => !head.includes(i))].slice(0, 5);
 }
 
 /**
@@ -34,13 +43,20 @@ export default function Review() {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(false);
   const [right, setRight] = useState(0);
+  // Today's day doc decides how the review counter is written.
+  const today = now ? dayOf(now) : '';
+  const [hasDay, setHasDay] = useState(false);
+  useEffect(() => (today ? watchDaysSince(uid, today, (d) => setHasDay(d.some((x) => x.id === today))) : undefined), [uid, today]);
 
-  if (terms && mistakes && now && queue === null) {
+  const drills = useDrills();
+  const track = useTrack();
+  if (terms && mistakes && drills && track.ready && now && queue === null) {
     setQueue(
       reviewQueue(
         terms.map((t) => ({ kind: 'term', id: t.id, nextReviewAt: t.nextReviewAt })),
         mistakes.map((m) => ({ kind: 'mistake', id: m.id, nextReviewAt: m.nextReviewAt })),
         now,
+        pillarIds(track.needIds, drills, mistakes).mistakes,
       ),
     );
   }
@@ -56,6 +72,7 @@ export default function Review() {
       const r = review(mistake.box, knew, now);
       updateMistake(uid, mistake.id, { box: r.box, nextReviewAt: r.nextReviewAt });
     }
+    if (today) bumpDayReviews(uid, today, hasDay);
     if (knew) setRight((n) => n + 1);
     setShown(false);
     setIndex((i) => i + 1);

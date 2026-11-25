@@ -29,7 +29,7 @@ import {
 import { getDb } from '@/lib/firebase-client';
 import { EXPORT_COLLECTIONS, type ExportCollection, type ExportData, type ExportDoc } from '@/lib/export';
 import { normalizeProfile } from '@/lib/profile';
-import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Month, Profile, Skill, SkillLevel, Term, Week } from '@/types/navi';
+import type { Ask, Course, Day, Digest, Drill, Evidence, Milestone, Mistake, Month, Profile, Skill, SkillLevel, Term, Track, TrackSummary, Week } from '@/types/navi';
 
 const profileRef = (uid: string) => doc(getDb(), 'users', uid, 'meta', 'profile');
 
@@ -56,7 +56,8 @@ export type DrillDoc = Drill & { id: string };
 /** Newest 60 drills, newest first. */
 export function watchDrills(uid: string, cb: (drills: DrillDoc[]) => void): () => void {
   return onSnapshot(
-    query(drillsCol(uid), orderBy('startedAt', 'desc'), limit(60)),
+    // About half a year of daily drills: the heatmap (26 weeks) and track rules (60 days) read them.
+    query(drillsCol(uid), orderBy('startedAt', 'desc'), limit(200)),
     (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as Drill) }))),
     (err) => console.warn('[repo] drills', err),
   );
@@ -182,6 +183,19 @@ export function patchDay(uid: string, id: string, patch: Partial<Pick<Day, 'note
   void updateDoc(doc(daysCol(uid), id), { ...patch, updatedAt: Date.now() }).catch((err) => console.warn('[repo] patch day', err));
 }
 
+/**
+ * Counts one review (term or mistake) on a day, for the heatmap. A new day doc
+ * gets the empty defaults; an existing one only its counter.
+ */
+export function bumpDayReviews(uid: string, id: string, exists: boolean): void {
+  const ref = doc(daysCol(uid), id);
+  const now = Date.now();
+  const write = exists
+    ? updateDoc(ref, { reviews: increment(1), updatedAt: now })
+    : setDoc(ref, { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, reviews: increment(1), updatedAt: now }, { merge: true });
+  void write.catch((err) => console.warn('[repo] day reviews', err));
+}
+
 /** Adds or removes one module and its minutes on today, with server-side increments. */
 export function tickDay(uid: string, id: string, existing: Day | null, m: { id: string; minutes: number }, done: boolean, now: number): void {
   if (!existing) {
@@ -231,7 +245,7 @@ export function addSkill(uid: string, name: string, area: string): void {
   void addDoc(skillsCol(uid), { name, area, level: 0, evidence: [], createdAt: now, updatedAt: now }).catch((err) => console.warn('[repo] add skill', err));
 }
 
-export function updateSkill(uid: string, id: string, patch: Pick<Skill, 'name' | 'area'>): void {
+export function updateSkill(uid: string, id: string, patch: Partial<Pick<Skill, 'name' | 'area'>>): void {
   void updateDoc(doc(skillsCol(uid), id), { ...patch, updatedAt: Date.now() }).catch((err) => console.warn('[repo] update skill', err));
 }
 
@@ -264,6 +278,18 @@ export function addMilestones(uid: string, list: Omit<Milestone, 'doneAt'>[]): v
   const batch = writeBatch(getDb());
   for (const m of list) batch.set(doc(milestonesCol(uid)), { ...m, doneAt: null });
   void batch.commit().catch((err) => console.warn('[repo] add milestones', err));
+}
+
+/** Starts a track: a milestone of kind 'track' (PLAN-track.md 3.1). */
+export function addTrack(uid: string, needs: Milestone['needs'], track: Track): void {
+  void addDoc(milestonesCol(uid), { title: track.area, kind: 'track', courseId: null, needs, checklist: [], order: 0.1, doneAt: null, track }).catch((err) =>
+    console.warn('[repo] add track', err),
+  );
+}
+
+/** Closes a track and fixes its summary; it never changes after this. */
+export function closeTrack(uid: string, id: string, track: Track, summary: TrackSummary, now: number): void {
+  void updateDoc(doc(milestonesCol(uid), id), { doneAt: now, track: { ...track, summary } }).catch((err) => console.warn('[repo] close track', err));
 }
 
 export function updateMilestone(uid: string, id: string, patch: Partial<Pick<Milestone, 'checklist' | 'doneAt'>>): void {

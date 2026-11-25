@@ -44,8 +44,8 @@ export function useMapData() {
 
   useEffect(() => watchSkills(uid, setSkills), [uid]);
   useEffect(() => watchMilestones(uid, setMilestones), [uid]);
-  // 12 weeks of days for the bar chart.
-  const since = learning.today ? addDays(mondayOf(learning.today), -77) : '';
+  // 26 weeks of days for the heatmap.
+  const since = learning.today ? addDays(mondayOf(learning.today), -175) : '';
   useEffect(() => (since ? watchDaysSince(uid, since, setDays) : undefined), [uid, since]);
 
   const { course, courses, ready } = learning;

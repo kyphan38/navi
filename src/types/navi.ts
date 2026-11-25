@@ -142,17 +142,46 @@ export type Day = {
   minutes: number;
   note: string;
   confidence: 1 | 2 | 3 | 4 | 5 | null;
+  reviews?: number;            // term and mistake reviews that day (heatmap)
   updatedAt: number;
+};
+
+// --- Tracks (PLAN-track.md): a milestone with kind 'track' and a `track` field ---
+export type TrackRung = 'mid' | 'senior';
+export type TrackSnapshot = {
+  levels: Record<string, SkillLevel>; // skill id -> level when the track started
+  drillAvg: number | null;            // % average of the pillar's drills, 60 days before
+  openMistakeIds: string[];           // the pillar's mistakes still in review (<= 50)
+};
+export type TrackSummary = {
+  met: boolean;
+  days: number;
+  late: boolean;
+  levels: { skillId: string; name: string; before: SkillLevel; after: SkillLevel; workVerified: boolean }[];
+  drillAvg: { before: number | null; after: number | null };
+  drills: { easy: number; medium: number; hard: number };
+  mistakesFixed: number;
+  mistakesNew: number;
+  redo: { topic: string; before: number; after: number }[];
+};
+export type Track = {
+  area: string;                // a pillar
+  rung: TrackRung;
+  startedAt: number;
+  endBy: number;               // soft deadline, startedAt + 28 days; never moved
+  baseline: TrackSnapshot;
+  summary: TrackSummary | null; // fixed when the learner closes the track
 };
 
 export type Milestone = {
   title: string;               // "Pass AWS Security Specialty", "Ready for mid-level"
-  kind: 'learning' | 'career';
+  kind: 'learning' | 'career' | 'track';
   courseId: string | null;     // learning milestone that is "finish this course"
   needs: { skillId: string; level: SkillLevel }[];
   checklist: { text: string; done: boolean; at: number | null }[];
   order: number;
   doneAt: number | null;
+  track?: Track;               // kind === 'track' only
 };
 
 // --- Digests (users/{uid}/digests/{YYYY-Www}) - written by Functions ---

@@ -10,7 +10,7 @@
 
 import { deleteApp, initializeApp } from 'firebase/app';
 import { GoogleAuthProvider, connectAuthEmulator, getAuth, signInWithCredential } from 'firebase/auth';
-import { addDoc, collection, connectFirestoreEmulator, doc, getDoc, getFirestore, setDoc, setLogLevel } from 'firebase/firestore';
+import { addDoc, collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getFirestore, setDoc, setLogLevel } from 'firebase/firestore';
 
 // Denied writes are expected here; the SDK would log each one as an error.
 setLogLevel('silent');
@@ -83,6 +83,30 @@ await expect('owner writes a bad day id', false, () =>
 await expect('owner writes a valid day', true, () =>
   setDoc(mine('days', '2000-01-01'), { moduleIds: [], drillId: null, minutes: 30, note: '', confidence: 3, updatedAt: 1 }),
 );
+
+await expect('owner writes a day with reviews', true, () =>
+  setDoc(mine('days', '2000-01-02'), { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, reviews: 3, updatedAt: 1 }),
+);
+await expect('owner writes negative reviews', false, () =>
+  setDoc(mine('days', '2000-01-02'), { moduleIds: [], drillId: null, minutes: 0, note: '', confidence: null, reviews: -1, updatedAt: 1 }),
+);
+const track = {
+  area: 'Cloud & security',
+  rung: 'mid',
+  startedAt: 1,
+  endBy: 2,
+  baseline: { levels: { dns: 1 }, drillAvg: null, openMistakeIds: [] },
+  summary: null,
+};
+const trackDoc = { title: 'Cloud & security', kind: 'track', courseId: null, needs: [], checklist: [], order: 0.1, doneAt: 1, track };
+await expect('owner writes a valid track', true, () => setDoc(mine('milestones', 'rules-check-track'), trackDoc));
+await expect('owner writes a track with a bad rung', false, () =>
+  setDoc(mine('milestones', 'rules-check-track'), { ...trackDoc, track: { ...track, rung: 'staff' } }),
+);
+await expect('owner puts a track on a learning milestone', false, () =>
+  setDoc(mine('milestones', 'rules-check-track'), { ...trackDoc, kind: 'learning' }),
+);
+await deleteDoc(mine('milestones', 'rules-check-track')).catch(() => {});
 
 if (savedProfile.exists()) await setDoc(mine('meta', 'profile'), savedProfile.data());
 

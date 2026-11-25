@@ -105,7 +105,7 @@ export function scorePercent(score: Score | null): number | null {
 }
 
 /** Days since 1970 for a 'YYYY-MM-DD' id, to rotate types by day. */
-function dayNumber(day: string): number {
+export function dayNumber(day: string): number {
   const [y, m, d] = day.split('-').map(Number);
   return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
 }

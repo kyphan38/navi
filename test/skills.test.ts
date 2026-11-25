@@ -89,5 +89,17 @@ test('missingStarters lists only catalog skills the learner lacks', () => {
   assert.equal(missingStarters([]).length, SKILL_CATALOG.length);
   const have = SKILL_CATALOG.slice(1).map((s) => ({ id: s.id }));
   assert.deepEqual(missingStarters([...have, { id: 'custom' }]).map((s) => s.id), [SKILL_CATALOG[0].id]);
-  assert.ok(SKILL_CATALOG.some((s) => s.area === 'Platform') && SKILL_CATALOG.some((s) => s.area === 'AI infra'));
+  assert.ok(SKILL_CATALOG.some((s) => s.area === 'Containers & Kubernetes') && SKILL_CATALOG.some((s) => s.area === 'AI infra'));
+});
+
+test('pillarMigration moves only starter skills still in an old area', async () => {
+  const { pillarMigration, PILLARS } = await import('@/lib/pillars');
+  const moves = pillarMigration([
+    { id: 'dns', area: 'Networking' },
+    { id: 'iac', area: 'My own area' },
+    { id: 'custom', area: 'Security' },
+    { id: 'slo', area: 'Observability & reliability' },
+  ]);
+  assert.deepEqual(moves, [{ id: 'dns', area: 'Linux & networking' }]);
+  for (const p of PILLARS) assert.ok(SKILL_CATALOG.filter((s) => s.area === p).length >= 4, p);
 });

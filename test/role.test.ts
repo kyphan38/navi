@@ -48,3 +48,11 @@ test('focusSkills: skills below the needed level, biggest gap first, at most 5',
   const many = Array.from({ length: 8 }, (_, i) => ({ id: `s${i}`, name: `S${i}`, level: 0 }));
   assert.equal(focusSkills(many.map((m) => ({ skillId: m.id, level: 2 })), many).length, 5);
 });
+
+test('focusSkills skips parked areas', () => {
+  const skills = [
+    { id: 'g', name: 'GPU', level: 0, area: 'AI infra' },
+    { id: 'k', name: 'K8s', level: 0, area: 'Containers & Kubernetes' },
+  ];
+  assert.deepEqual(focusSkills([{ skillId: 'g', level: 2 }, { skillId: 'k', level: 2 }], skills), ['K8s']);
+});

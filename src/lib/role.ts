@@ -1,6 +1,7 @@
 // navi - Skills against a target role (V10): what is missing, which evidence is thin,
 // what to learn next. Pure.
 
+import { PARKED_AREAS } from '@/lib/pillars';
 import type { Evidence, SkillLevel } from '@/types/navi';
 
 export type RoleSkill = { id: string; name: string; computed: SkillLevel; all: Evidence[] };
@@ -40,13 +41,14 @@ export function roleReadiness(gaps: Gap[]): number {
 /**
  * Names of the role's skills still below the level it needs, biggest gap first,
  * at most 5. Uses the level cached on the skill (the Map keeps it in step).
+ * Parked areas (AI infra) never come up.
  */
-export function focusSkills(needs: { skillId: string; level: number }[], skills: { id: string; name: string; level: number }[]): string[] {
+export function focusSkills(needs: { skillId: string; level: number }[], skills: { id: string; name: string; level: number; area?: string }[]): string[] {
   const byId = new Map(skills.map((s) => [s.id, s]));
   return needs
     .flatMap((n) => {
       const s = byId.get(n.skillId);
-      return s && s.level < n.level ? [{ name: s.name, gap: n.level - s.level }] : [];
+      return s && s.level < n.level && !PARKED_AREAS.includes(s.area ?? '') ? [{ name: s.name, gap: n.level - s.level }] : [];
     })
     .sort((a, b) => b.gap - a.gap || a.name.localeCompare(b.name))
     .slice(0, 5)

@@ -26,7 +26,8 @@ export const CAREER_CHECKLIST = [
 ];
 
 export function minutesLeft(m: Milestone, levels: Map<string, SkillLevel>, modules: CourseModule[]): number {
-  if (m.kind === 'career') return 0;
+  // Careers have a checklist and tracks a fixed end date: no hours to forecast.
+  if (m.kind === 'career' || m.kind === 'track') return 0;
   if (m.courseId) return modules.filter((x) => x.doneAt === null).reduce((s, x) => s + x.minutes, 0);
   const open = m.needs.filter((n) => (levels.get(n.skillId) ?? 0) < n.level);
   const used = new Set<string>();
@@ -47,6 +48,7 @@ export function minutesLeft(m: Milestone, levels: Map<string, SkillLevel>, modul
 
 export function isDone(m: Milestone, left: number): boolean {
   if (m.doneAt !== null) return true;
+  if (m.kind === 'track') return false;
   if (m.kind === 'career') return m.checklist.length > 0 && m.checklist.every((c) => c.done);
   return left === 0;
 }

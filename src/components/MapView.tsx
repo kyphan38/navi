@@ -8,6 +8,9 @@ import MapRoute, { type RouteStop } from '@/components/MapRoute';
 import MapWhatIf from '@/components/MapWhatIf';
 import OneOnOnePrep from '@/components/OneOnOnePrep';
 import BragDoc from '@/components/map/BragDoc';
+import Heatmap from '@/components/map/Heatmap';
+import Track from '@/components/map/Track';
+import { useMistakes } from '@/hooks/useMistakes';
 import { SkillAdd, SkillEdit } from '@/components/map/SkillEdit';
 import Stories from '@/components/map/Stories';
 import TargetRole from '@/components/map/TargetRole';
@@ -149,14 +152,18 @@ export default function MapView() {
   const [role, setRole] = useState<TargetRoleData | null>(null);
   useEffect(() => watchStories(uid, setStories), [uid]);
   useEffect(() => watchRole(uid, setRole), [uid]);
+  const mistakes = useMistakes();
 
-  if (!skills || !milestones || !days || !learning.ready || !now) return <main className="column" />;
+  if (!skills || !milestones || !days || !learning.ready || !now || !mistakes) return <main className="column" />;
 
   const levels = new Map(skills.map((s) => [s.id, s.computed]));
   // Every running course (V6); a course milestone counts only its own course.
   const modules = learning.courses.flatMap((c) => c.modules);
   const rough = !learning.budget.real;
-  const info = milestones.map((m) => {
+  // Tracks have their own section; only the running one is a stop on the route.
+  const plain = milestones.filter((m) => m.kind !== 'track');
+  const running = milestones.find((m) => m.kind === 'track' && m.doneAt === null && m.track);
+  const info = plain.map((m) => {
     const own = m.courseId ? learning.courses.find((c) => c.id === m.courseId)?.modules ?? [] : modules;
     const left = minutesLeft(m, levels, own);
     const done = isDone(m, left);
@@ -169,6 +176,7 @@ export default function MapView() {
     rough,
     checklist: i.m.kind === 'career' ? `${i.m.checklist.filter((c) => c.done).length}/${i.m.checklist.length}` : null,
   }));
+  if (running?.track) stops.unshift({ m: running, done: false, date: running.track.endBy, rough: false, checklist: null });
   const whatIf = info.filter((i) => i.m.kind === 'learning' && !i.done).map((i) => ({ id: i.m.id, title: i.m.title, left: i.left }));
   const atLevel = skills.filter((s) => s.computed > 0).length;
   const areas = [...new Set(skills.map((s) => s.area))].sort();
@@ -182,8 +190,18 @@ export default function MapView() {
       </section>
 
       <section className="mt-10">
+        <SectionTitle>track</SectionTitle>
+        <Track skills={skills} drills={drills ?? []} mistakes={mistakes} milestones={milestones} now={now} />
+      </section>
+
+      <section className="mt-10">
         <SectionTitle>what if</SectionTitle>
-        <MapWhatIf items={whatIf} hours={hours} realHours={realHours} real={learning.budget.real} onHours={setHours} now={now} days={days} today={learning.today} />
+        <MapWhatIf items={whatIf} hours={hours} realHours={realHours} real={learning.budget.real} onHours={setHours} now={now} />
+      </section>
+
+      <section className="mt-10">
+        <SectionTitle>history</SectionTitle>
+        <Heatmap days={days} drills={drills ?? []} modules={modules} today={learning.today} />
       </section>
 
       <section className="mt-10">

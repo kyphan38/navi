@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { useUid } from '@/components/AuthGate';
+import { pillarMigration } from '@/lib/pillars';
 import { addSkill, removeSkill, seedSkills, updateSkill } from '@/lib/repo';
 import { missingStarters } from '@/lib/skill-level';
 
@@ -72,11 +73,12 @@ export function SkillEdit({ id, name, area, areas }: { id: string; name: string;
 }
 
 /** Add a skill by hand, and add starter skills the learner does not have yet. */
-export function SkillAdd({ skills, areas }: { skills: { id: string }[]; areas: string[] }) {
+export function SkillAdd({ skills, areas }: { skills: { id: string; area: string }[]; areas: string[] }) {
   const uid = useUid();
   const [name, setName] = useState('');
   const [area, setArea] = useState('');
   const missing = missingStarters(skills);
+  const moves = pillarMigration(skills);
   return (
     <div className="mt-2 space-y-3">
       <form
@@ -93,6 +95,14 @@ export function SkillAdd({ skills, areas }: { skills: { id: string }[]; areas: s
           add
         </button>
       </form>
+      {moves.length > 0 && (
+        <p className="flex items-baseline gap-3 text-[14px] text-muted">
+          <span>{moves.length} skills use old areas</span>
+          <button type="button" onClick={() => moves.forEach((m) => updateSkill(uid, m.id, { area: m.area }))} className={quiet}>
+            move
+          </button>
+        </p>
+      )}
       {missing.length > 0 && (
         <p className="flex items-baseline gap-3 text-[14px] text-muted">
           <span>{missing.length} starter skills not added</span>

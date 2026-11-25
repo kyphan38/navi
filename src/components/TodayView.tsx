@@ -9,6 +9,7 @@ import ModuleRow from '@/components/ModuleRow';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
 import { useFocusTopics } from '@/hooks/useFocusTopics';
+import { useTrack } from '@/hooks/useTrack';
 import { useLearning } from '@/hooks/useLearning';
 import { useNow } from '@/hooks/useNow';
 import { useMistakes } from '@/hooks/useMistakes';
@@ -20,6 +21,7 @@ import { scorePercent, todayDrill, topicForDay, typeLabel } from '@/lib/drills';
 import { redoPick } from '@/lib/redo';
 import { dueItems } from '@/lib/leitner';
 import { todayModules } from '@/lib/plan';
+import { pillarIds, trackDrillPick } from '@/lib/track';
 
 const fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const noop = () => () => {};
@@ -45,8 +47,13 @@ export default function TodayView() {
   const terms = useTerms();
   const now = useNow();
   // A low-score drill from two weeks ago, to try again (V5).
-  const redo = drills && now && pick?.state !== 'active' ? redoPick(drills, now) : null;
   const mistakes = useMistakes();
+  const track = useTrack();
+  const pillar = drills && mistakes ? pillarIds(track.needIds, drills, mistakes) : null;
+  const redo = drills && now && pick?.state !== 'active' ? redoPick(drills, now, pillar?.drills) : null;
+  // A running track changes tech days only (PLAN-track.md 5).
+  const trackPick =
+    pick?.state === 'todo' && track.active && drills ? trackDrillPick(day, track.active.track, track.needIds, track.skills, drills, pick) : null;
   // Review shows once anything is in review; done = nothing due right now. At most 5 a day.
   const inReview = (terms ?? []).some((t) => t.status === 'learning') || (mistakes ?? []).some((m) => m.nextReviewAt !== null);
   const due = terms && mistakes && now ? dueItems([...terms, ...mistakes], now).length : 0;
@@ -58,7 +65,8 @@ export default function TodayView() {
   const mods = day ? todayModules(planned, day, new Set(todayDoc?.moduleIds ?? [])) : [];
   const learnDone = mods.length > 0 && mods.every((m) => m.doneAt !== null);
   const focus = useFocusTopics();
-  const topic = day ? topicForDay(day, week?.plan.drillTopics ?? [], focus) : undefined;
+  // Priority: track > target role > course.
+  const topic = trackPick?.topic ?? (day ? topicForDay(day, week?.plan.drillTopics ?? [], focus) : undefined);
 
   return (
     <main className="column">
@@ -92,13 +100,18 @@ export default function TodayView() {
             {pick.state === 'todo' && (
               <span className="inline-flex flex-wrap items-baseline gap-x-3">
                 <span className="text-ink">
-                  {typeLabel(pick.type)} <span className="font-mono text-[12px] text-faint">{pick.level}</span>
+                  {typeLabel(trackPick?.type ?? pick.type)} <span className="font-mono text-[12px] text-faint">{trackPick?.level ?? pick.level}</span>
                 </span>
                 {topic && <span className="min-w-0 text-[14px] text-faint">{topic}</span>}
+                {trackPick && track.active && <span className="font-mono text-[11px] text-faint">{track.active.track.area.toLowerCase()}</span>}
                 {busy ? (
                   <Waiting />
                 ) : (
-                  <button type="button" onClick={() => void start(pick.type, pick.level, topic)} className="text-faint transition-colors hover:text-ink">
+                  <button
+                    type="button"
+                    onClick={() => void start(trackPick?.type ?? pick.type, trackPick?.level ?? pick.level, topic, undefined, trackPick?.skillId)}
+                    className="text-faint transition-colors hover:text-ink"
+                  >
                     start
                   </button>
                 )}

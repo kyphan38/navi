@@ -77,7 +77,11 @@ export const skillTag = onCall({ ...OPTS, timeoutSeconds: 300 }, async (req) => 
     const modules = (c.get('modules') as { id: string; skillIds: string[] }[]).map((m) => ({ ...m, skillIds: tags.get(`m:${c.id}:${m.id}`) ?? [] }));
     batch.update(c.ref, { modules, taggedAt: now, updatedAt: now });
   }
-  for (const d of drills) batch.update(d.ref, { skillIds: tags.get(`d:${d.id}`) ?? [], tagged: true });
+  // Merge: a track drill already carries the skill it was started for.
+  for (const d of drills) {
+    const had = (d.get('skillIds') as string[] | undefined) ?? [];
+    batch.update(d.ref, { skillIds: [...new Set([...had, ...(tags.get(`d:${d.id}`) ?? [])])].slice(0, 5), tagged: true });
+  }
   await batch.commit();
   return { tagged: items.length };
 });

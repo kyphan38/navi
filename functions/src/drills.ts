@@ -41,7 +41,17 @@ async function writeIfSame(ref: DocumentReference, data: Record<string, unknown>
 }
 
 /** What a new drill is built from. `scenario`: a real problem (Ask a senior). `redoOf`: the low-score drill it redoes. */
-export type StartInput = { type: DrillType; level: DrillLevel; topic?: string; scenario?: string; source?: ScenarioSource; redoOf?: string; fromAsk?: string };
+export type StartInput = {
+  type: DrillType;
+  level: DrillLevel;
+  topic?: string;
+  scenario?: string;
+  source?: ScenarioSource;
+  redoOf?: string;
+  fromAsk?: string;
+  /** Track drills (PLAN-track.md 3.3): the skill it trains, known before any tagging. */
+  skillId?: string;
+};
 
 /** Checks the level is open for this type (from the learner's done drills). */
 async function assertOpen(uid: string, type: DrillType, lvl: DrillLevel): Promise<void> {
@@ -89,7 +99,7 @@ export async function startDrill(uid: string, input: StartInput): Promise<string
     type,
     level: lvl,
     topic: res.topic,
-    skillIds: [],
+    skillIds: input.skillId ? [input.skillId] : [],
     clock: res.clock,
     brief: res.brief,
     rounds: [res.round],
@@ -115,20 +125,28 @@ export async function startDrill(uid: string, input: StartInput): Promise<string
 }
 
 const ID = /^[A-Za-z0-9]{1,40}$/;
+const SKILL_ID = /^[A-Za-z0-9-]{1,40}$/;
 
 /** New drill: hidden story + round 1. Drops any drill still active. `redoOf` marks a redo (V5). */
 export const drillStart = onCall(OPTS, async (req) => {
   const uid = guard(req.auth);
-  const { type, level, topic, redoOf } = (req.data ?? {}) as Record<string, unknown>;
+  const { type, level, topic, redoOf, skillId } = (req.data ?? {}) as Record<string, unknown>;
   if (!isDrillType(type)) throw new HttpsError('invalid-argument', 'Unknown drill type');
   const spec = DRILLS[type];
   if (typeof level !== 'string' || !(spec.levels as readonly string[]).includes(level)) throw new HttpsError('invalid-argument', 'Unknown level');
   if (redoOf !== undefined && (typeof redoOf !== 'string' || !ID.test(redoOf))) throw new HttpsError('invalid-argument', 'Bad drill id');
+  let skill: string | undefined;
+  if (skillId !== undefined) {
+    if (typeof skillId !== 'string' || !SKILL_ID.test(skillId)) throw new HttpsError('invalid-argument', 'Bad skill id');
+    // Only a skill the learner has; an unknown one is dropped, not an error.
+    if ((await getFirestore().doc(`users/${uid}/skills/${skillId}`).get()).exists) skill = skillId;
+  }
   const id = await startDrill(uid, {
     type,
     level: level as DrillLevel,
     topic: typeof topic === 'string' ? topic : undefined,
     redoOf: redoOf as string | undefined,
+    skillId: skill,
   });
   return { id };
 });

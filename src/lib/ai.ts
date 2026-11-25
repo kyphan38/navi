@@ -12,7 +12,7 @@ function call<In, Out>(name: string) {
   return (data: In) => httpsCallable<In, Out>(getFunctionsClient(), name, { timeout: TIMEOUT })(data).then((r) => r.data);
 }
 
-export const startDrill = call<{ type: DrillType; level: DrillLevel; topic?: string; redoOf?: string }, { id: string }>('drillStart');
+export const startDrill = call<{ type: DrillType; level: DrillLevel; topic?: string; redoOf?: string; skillId?: string }, { id: string }>('drillStart');
 export const answerDrill = call<{ drillId: string; answer: string }, { done: boolean }>('drillAnswer');
 export const addTerms = call<{ names: string[]; source?: 'drill' | 'manual'; sourceId?: string }, { ids: string[] }>('termCard');
 export type QuizQuestion = { question: string; options: string[]; answer: number; why: string };
