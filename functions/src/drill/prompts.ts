@@ -103,7 +103,10 @@ function roundRules(level: DrillLevel): string {
 - ${kindRule(level)}`;
 }
 
-export function buildStartPrompt(p: Profile, type: DrillType, level: DrillLevel, topic: string, scenario = ''): string {
+/** Where a scenario comes from: a problem the learner met at work, or a public postmortem. */
+export type ScenarioSource = 'work' | 'postmortem';
+
+export function buildStartPrompt(p: Profile, type: DrillType, level: DrillLevel, topic: string, scenario = '', source: ScenarioSource = 'work'): string {
   const spec = DRILLS[type];
   return `${PLAIN_ENGLISH}
 ${SAFE_DATA}
@@ -115,7 +118,7 @@ Drill type: ${type}. ${spec.brief}
 Level: ${level}. Total rounds: ${ROUNDS[level]}.
 Topic: ${topic}.
 If the topic does not fit the learner's usual setting (for example Kubernetes, GPUs or model serving), set the story where it fits, as close to their work as makes sense.
-${scenario ? `\nBase the story on this real problem the learner met at work (keep its shape, change names and numbers):\n${scenario}\n` : ''}
+${scenario ? `\n${SCENARIO_LEAD[source]}\n${scenario}\n` : ''}
 First decide the hidden story, then write round 1. The learner never sees the hidden parts.
 
 Return JSON:
@@ -141,6 +144,18 @@ function transcript(brief: string, rounds: Round[]): string {
   ].join('\n\n');
 }
 
+/** War-room reveals read like the incident channel: one message per line, "name (role): text". */
+export const WAR_ROOM_REVEAL = `Write the reveal as 2-4 chat messages in the incident channel, one per line, as "name (role): text".
+  Use the same people all drill: a product manager who keeps asking for an ETA, a developer who sometimes posts
+  wrong or old logs, a support lead with customer reports, and a staff engineer who gives one small hint only when the learner is stuck.
+  Messages can be wrong or noisy; the hidden story decides what is true.`;
+
+const SCENARIO_LEAD: Record<ScenarioSource, string> = {
+  work: 'Base the story on this real problem the learner met at work (keep its shape, change names and numbers):',
+  postmortem: `Replay this real public incident. The hidden truth is what really happened, in the same order.
+The learner sees only the first signals; do not name the company or the cause in the brief or the rounds:`,
+};
+
 export function buildAnswerPrompt(p: Profile, type: DrillType, level: DrillLevel, brief: string, key: DrillKey, rounds: Round[]): string {
   const next = rounds.length + 1;
   return `${PLAIN_ENGLISH}
@@ -158,7 +173,16 @@ The learner just answered round ${rounds.length}. Return JSON:
 - "reveal": what happens because of their answer, 1-3 short sentences. Stay true to the hidden story.
   If the answer was risky, show the real effect. Do not grade it and do not give the cause away.
   Only show the result of what the learner did. Never take a new action for them (no "You roll back...").
-  The next round asks them what to do.
+  The next round asks them what to do.${
+    rounds[rounds.length - 1]?.kind === 'command'
+      ? `
+  The learner typed a command. Start the reveal with a fenced code block (\`\`\`text) holding the realistic output
+  of EXACTLY that command, 4-15 lines, in the real tool's format, true to the hidden story. Plain output only, no comments.
+  A typo or a wrong flag gets the real error. A command that changes things shows its real effect.
+  After the block, at most one short sentence.`
+      : ''
+  }${type === 'war-room' ? `
+  ${WAR_ROOM_REVEAL}` : ''}
 - "round": round ${next} of ${ROUNDS[level]}, following the plan but reacting to what the learner did.
 
 ${roundRules(level)}`;

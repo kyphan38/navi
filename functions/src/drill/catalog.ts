@@ -186,6 +186,45 @@ The hidden truth holds the real chain of events in order.`,
       'a config service returns empty values',
     ],
   },
+  'war-room': {
+    group: 'tech',
+    levels: LEVELS,
+    brief: `An incident in a busy incident chat channel. The brief is the first alert plus 2-3 chat messages.
+Several people talk at once: a product manager asks for an ETA, a developer posts logs (some wrong or old),
+support reports customers, a staff engineer helps only a little. Each round the learner either picks the next
+technical step, writes a command, or writes a short message to the channel (status, ask for help, give roles).
+They must filter the noise, keep calm, and keep people updated.`,
+    criteria: ['triage', 'hypothesis', 'safety', 'comms'],
+    topics: [
+      'checkout errors after a feature flag change',
+      'login is slow for half of the users',
+      'a Kubernetes upgrade left some pods pending',
+      'card payments time out at one partner',
+      'model API returns errors under load',
+      'a data job filled the shared database',
+    ],
+  },
+  'spot-the-lie': {
+    group: 'tech',
+    levels: LEVELS,
+    brief: `Spot the lie. In the brief, a confident engineer explains how something works (6-10 sentences, plain words).
+One or two claims are wrong in a subtle, believable way; the rest is correct. Put the wrong claims and the real facts
+in the hidden truth. Rounds ask the learner to find the wrong claims, explain why they are wrong,
+give the correct version, and say how they would check it (a doc, a command or a small test).
+Never hint which sentence is wrong.`,
+    criteria: ['hypothesis', 'comms'],
+    topics: [
+      'how kube-scheduler picks a node',
+      'how Kubernetes requests and limits work for memory',
+      'how DNS caching and TTL work',
+      'how a TLS handshake works',
+      'how the KV cache works in LLM serving',
+      'how continuous batching works in vLLM',
+      'how Terraform state and locking work',
+      'how IAM policy evaluation works',
+      'how a Linux process gets OOM killed',
+    ],
+  },
   // ---------------------------------------------------------------- ai
   'review-ai-output': {
     group: 'ai',

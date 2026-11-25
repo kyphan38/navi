@@ -15,6 +15,8 @@ export const DRILL_TYPES: readonly { type: DrillType; group: DrillGroup; label: 
   { type: 'cost', group: 'tech', label: 'cost', line: 'The cloud bill went up. Why?', levels: ALL },
   { type: 'capacity', group: 'tech', label: 'capacity', line: 'Estimate GPUs, memory or nodes by hand.', levels: ALL },
   { type: 'failure-mode', group: 'tech', label: 'failure mode', line: 'One part fails. What breaks next?', levels: ALL },
+  { type: 'war-room', group: 'tech', label: 'war room', line: 'An incident with a noisy chat channel.', levels: ALL },
+  { type: 'spot-the-lie', group: 'tech', label: 'spot the lie', line: 'Find what the expert got wrong.', levels: ALL },
   { type: 'review-ai-output', group: 'ai', label: 'review AI output', line: 'Find the mistakes in code an AI wrote.', levels: ALL },
   { type: 'brief-an-agent', group: 'ai', label: 'brief an agent', line: 'Write a clear, safe task for an AI agent.', levels: ALL },
   { type: 'use-ai-or-not', group: 'ai', label: 'use AI or not', line: 'AI, together, or by hand? Name the risk.', levels: ALL },
@@ -133,7 +135,7 @@ export function todayDrill(day: string, drills: (Drill & { id: string })[]): Tod
 
 /**
  * Which type a day gets (PLAN-navi.md 6.4): about half the days are tech
- * (rotating its 8 types), the others rotate the 4 other groups. Sunday is incident.
+ * (rotating its 10 types), the others rotate the 4 other groups. Sunday is incident.
  */
 export function typeForDay(day: string): DrillType {
   if (parseDay(day).getDay() === 0) return 'incident';

@@ -37,7 +37,9 @@ export function DrillLog({ drill, upTo }: { drill: DrillDoc; upTo?: number }) {
           )}
           {r.reveal && (
             <LogRow clock="">
-              <p className="border-l border-line-strong pl-3 text-muted">{r.reveal}</p>
+              <div className="border-l border-line-strong pl-3 text-muted">
+                <Prose text={r.reveal} />
+              </div>
             </LogRow>
           )}
         </div>

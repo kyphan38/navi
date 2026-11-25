@@ -26,6 +26,9 @@ const BLOCKS: Block[] = [
       'Mistakes and new terms from a drill go to review.',
       'capacity: estimate GPUs, memory or nodes by hand. The method and the rough size count, not exact digits.',
       'failure mode: one part of a working system fails. Say what breaks next, how far it spreads, and how to limit it.',
+      'war room: an incident in a noisy chat channel. Find the real signal and keep people updated.',
+      'spot the lie: an expert explains something with one or two wrong claims. Find them and fix them.',
+      'When you type a command, you see what that command would print.',
       'Topics also cover Kubernetes, GPUs and model serving, not only AWS.',
       'A drill under 60% comes back after 2 weeks as "redo" on Today, one level up when that level is open. The new debrief shows your old score next to the new one.',
     ],
@@ -93,6 +96,7 @@ const BLOCKS: Block[] = [
     title: 'news',
     lines: [
       'A weekly digest (up to 5 items) and one public postmortem, made every Sunday morning.',
+      'practice this under the postmortem replays that real incident as a drill, at your highest open level.',
       'get this week makes it now. Every link was opened and checked before it was saved.',
       'save under an item keeps it, with one line on what you take from it. Saved items sit at the top; mark them read when done.',
     ],

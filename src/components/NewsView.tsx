@@ -8,6 +8,7 @@ import Waiting from '@/components/Waiting';
 import { useLearning } from '@/hooks/useLearning';
 import { aiError, newsNow } from '@/lib/ai';
 import { weekOf } from '@/lib/plan';
+import { PracticePostmortem } from '@/components/PracticeAsk';
 import { watchDigests, type DigestDoc } from '@/lib/repo';
 import { watchSaved, type SavedDoc } from '@/lib/repo-career';
 import { SaveItem, SavedList } from '@/components/news/Saved';
@@ -78,6 +79,9 @@ function DigestBody({ d, save }: { d: DigestDoc; save: SaveCtx }) {
               </li>
             ))}
           </ol>
+          <p className="mt-3">
+            <PracticePostmortem weekId={d.id} />
+          </p>
         </section>
       )}
       {!d.items.length && !d.postmortem && <p className="text-muted">Nothing with a working link this week.</p>}

@@ -31,7 +31,7 @@ export type Skill = {
 export type DrillGroup = 'tech' | 'ai' | 'comms' | 'business' | 'writing';
 export type DrillType =
   | 'incident' | 'security-review' | 'why-chain' | 'tradeoff' | 'logs' | 'cost'        // tech
-  | 'capacity' | 'failure-mode'                                                        // tech (added 2026-11-25)
+  | 'capacity' | 'failure-mode' | 'war-room' | 'spot-the-lie'                          // tech (added 2026-11-25)
   | 'review-ai-output' | 'brief-an-agent' | 'use-ai-or-not'                            // ai
   | 'three-audiences' | 'say-no' | 'clarify' | 'feedback' | 'status-update'           // comms
   | 'payment-case' | 'business-impact'                                                 // business

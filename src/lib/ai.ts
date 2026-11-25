@@ -53,6 +53,7 @@ export const askSenior = call<{ question: string }, { id: string }>('askSenior')
 
 // --- career tools ---
 export const drillFromAsk = call<{ askId: string }, { id: string }>('drillFromAsk');
+export const drillFromPostmortem = call<{ weekId: string }, { id: string }>('drillFromPostmortem');
 export type StoryDraft = { title: string; situation: string; task: string; action: string; result: string };
 export const storyDraft = call<{ kind: 'drill' | 'work'; source: string }, StoryDraft>('storyDraft');
 export type ExamQuestion = { question: string; options: string[]; answers: number[]; why: string };

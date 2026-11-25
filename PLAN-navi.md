@@ -142,7 +142,7 @@ export type Skill = {
 export type DrillGroup = 'tech' | 'ai' | 'comms' | 'business' | 'writing';
 export type DrillType =
   | 'incident' | 'security-review' | 'why-chain' | 'tradeoff' | 'logs' | 'cost'        // tech
-  | 'capacity' | 'failure-mode'                                                        // tech (added 2026-11-25)
+  | 'capacity' | 'failure-mode' | 'war-room' | 'spot-the-lie'                          // tech (added 2026-11-25)
   | 'review-ai-output' | 'brief-an-agent' | 'use-ai-or-not'                            // ai
   | 'three-audiences' | 'say-no' | 'clarify' | 'feedback' | 'status-update'           // comms
   | 'payment-case' | 'business-impact'                                                 // business
@@ -379,6 +379,8 @@ Lên hard tương tự từ medium. Người dùng luôn có thể chọn mức 
 | | `prioritize` | 6 việc, chỉ đủ thời gian làm 3 |
 | tech (thêm 2026-11-25) | `capacity` | Ước lượng VRAM (weights + KV cache), số GPU, size node bằng tay |
 | | `failure-mode` | Hệ thống đang chạy, hỏng 1 phần: gì hỏng tiếp, blast radius, cách giới hạn |
+| | `war-room` | Sự cố trong kênh chat ồn: PM hỏi ETA, dev dán log sai, phải lọc nhiễu và cập nhật |
+| | `spot-the-lie` | "Chuyên gia" giải thích một cơ chế, cài 1-2 ý sai tinh vi. Tìm và sửa |
 
 P1 chỉ làm `incident` + `security-review`. P5 làm các loại còn lại.
 
@@ -589,3 +591,6 @@ Ghi chú khi làm:
 - Nhiều khóa học cùng lúc.
 - Hướng DevOps -> Platform -> AI infra (2026-11-25): chủ đề drill có thêm Kubernetes, GPU, model serving;
   bài hôm nay xen kẽ chủ đề khóa học và skill target role còn thiếu (`focusSkills`).
+- Drill thật hơn (2026-11-25): vòng `command` trả output giả đúng lệnh vừa gõ (code block); `war-room` hiện
+  thông tin dạng tin nhắn chat; "practice this" dưới postmortem của tuần chạy lại sự cố thật thành bài `incident`
+  (`drillFromPostmortem`).

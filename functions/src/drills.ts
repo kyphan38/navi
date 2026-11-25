@@ -7,7 +7,7 @@ import { getFirestore, type DocumentReference } from 'firebase-admin/firestore';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import { DRILLS, ROUNDS, isDrillType, openLevels, type DrillLevel, type DrillType } from './drill/catalog.ts';
 import { fakeAnswer, fakeFinish, fakeStart } from './drill/fake.ts';
-import { ANSWER_SCHEMA, FINISH_SCHEMA, START_SCHEMA, buildAnswerPrompt, buildFinishPrompt, buildStartPrompt, cleanAnswer, parseAnswer, parseFinish, parseStart, type DrillKey, type Round } from './drill/prompts.ts';
+import { ANSWER_SCHEMA, FINISH_SCHEMA, START_SCHEMA, buildAnswerPrompt, buildFinishPrompt, buildStartPrompt, cleanAnswer, parseAnswer, parseFinish, parseStart, type DrillKey, type Round, type ScenarioSource } from './drill/prompts.ts';
 import { GEMINI_MODEL_START, GEMINI_THINKING_START, GEMINI_MODEL_FINISH, GEMINI_THINKING_FINISH, thinkingOf, DAY, OPTS, guard, ask, loadProfile } from './shared.ts';
 import { saveTerms } from './termFns.ts';
 
@@ -41,7 +41,7 @@ async function writeIfSame(ref: DocumentReference, data: Record<string, unknown>
 }
 
 /** What a new drill is built from. `scenario`: a real problem (Ask a senior). `redoOf`: the low-score drill it redoes. */
-export type StartInput = { type: DrillType; level: DrillLevel; topic?: string; scenario?: string; redoOf?: string; fromAsk?: string };
+export type StartInput = { type: DrillType; level: DrillLevel; topic?: string; scenario?: string; source?: ScenarioSource; redoOf?: string; fromAsk?: string };
 
 /** Checks the level is open for this type (from the learner's done drills). */
 async function assertOpen(uid: string, type: DrillType, lvl: DrillLevel): Promise<void> {
@@ -71,7 +71,7 @@ export async function startDrill(uid: string, input: StartInput): Promise<string
   const scenario = (input.scenario ?? '').trim().slice(0, 2000);
 
   const profile = await loadProfile(uid);
-  const res = await ask(buildStartPrompt(profile, type, lvl, topic, scenario), START_SCHEMA, parseStart, () => fakeStart(type, lvl), {
+  const res = await ask(buildStartPrompt(profile, type, lvl, topic, scenario, input.source), START_SCHEMA, parseStart, () => fakeStart(type, lvl), {
     model: GEMINI_MODEL_START.value(),
     thinking: thinkingOf(GEMINI_THINKING_START.value()),
     temperature: 0.9,

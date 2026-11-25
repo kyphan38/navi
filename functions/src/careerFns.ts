@@ -1,6 +1,6 @@
 // ============================================================
 // navi - Cloud Functions: career tools
-// drillFromAsk (V7), storyDraft (V2), moduleExam (V4), bragDoc (V3), roleNeeds (V10).
+// drillFromAsk (V7), drillFromPostmortem, storyDraft (V2), moduleExam (V4), bragDoc (V3), roleNeeds (V10).
 // Nothing here stores text except drillFromAsk (it starts a drill). The app saves
 // stories and the role itself, after the learner checks them.
 // ============================================================
@@ -45,6 +45,20 @@ export const drillFromAsk = onCall(OPTS, async (req) => {
   const pick = await ask(buildPickPrompt(question), PICK_SCHEMA, parsePick, fakePick, { thinking: 'low', temperature: 0.2 });
   const level = await highestOpen(uid, pick.type);
   const id = await startDrill(uid, { type: pick.type, level, topic: pick.topic, scenario: question, fromAsk: askId });
+  return { id };
+});
+
+/** "practice this" under the postmortem of the week: replay the real incident as a drill. */
+export const drillFromPostmortem = onCall(OPTS, async (req) => {
+  const uid = guard(req.auth);
+  const { weekId } = (req.data ?? {}) as { weekId?: unknown };
+  if (typeof weekId !== 'string' || !/^[0-9W-]{1,20}$/.test(weekId)) throw new HttpsError('invalid-argument', 'Bad id');
+  const snap = await getFirestore().doc(`users/${uid}/digests/${weekId}`).get();
+  const pm = snap.get('postmortem') as { title?: unknown; source?: unknown; summary?: unknown } | null | undefined;
+  if (!pm) throw new HttpsError('not-found', 'No postmortem this week');
+  const scenario = [text(pm.title, 300), text(pm.source, 100), text(pm.summary, 2000)].filter(Boolean).join('\n');
+  const level = await highestOpen(uid, 'incident');
+  const id = await startDrill(uid, { type: 'incident', level, topic: text(pm.title, 200), scenario, source: 'postmortem' });
   return { id };
 });
 

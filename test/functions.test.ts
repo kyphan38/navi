@@ -125,3 +125,18 @@ test('finish prompt asks for even-better ideas even at full score', () => {
   const rounds = [{ prompt: 'p', kind: 'text' as const, options: [], hint: '', answer: 'a' }];
   assert.ok(buildFinishPrompt(profile, 'incident', 'easy', 'b', key, rounds).includes('ALWAYS, even when every score is 3'));
 });
+
+test('a command answer asks for real tool output; other answers do not', () => {
+  const cmd = [{ prompt: 'p', kind: 'command' as const, options: [], hint: '', answer: 'kubectl get pods' }];
+  const txt = [{ prompt: 'p', kind: 'text' as const, options: [], hint: '', answer: 'check the pods' }];
+  assert.match(buildAnswerPrompt(profile, 'incident', 'medium', 'b', key, cmd), /output\n  of EXACTLY that command/);
+  assert.doesNotMatch(buildAnswerPrompt(profile, 'incident', 'medium', 'b', key, txt), /EXACTLY that command/);
+});
+
+test('war-room reveals are chat messages; postmortem drills replay the real incident', () => {
+  const rounds = [{ prompt: 'p', kind: 'choice' as const, options: ['a', 'b'], hint: '', answer: 'a' }];
+  assert.match(buildAnswerPrompt(profile, 'war-room', 'easy', 'b', key, rounds), /chat messages/);
+  assert.doesNotMatch(buildAnswerPrompt(profile, 'incident', 'easy', 'b', key, rounds), /chat messages/);
+  assert.match(buildStartPrompt(profile, 'incident', 'easy', 'x', 'CDN outage', 'postmortem'), /Replay this real public incident/);
+  assert.match(buildStartPrompt(profile, 'incident', 'easy', 'x', 'pool full'), /met at work/);
+});
