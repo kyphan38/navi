@@ -272,9 +272,9 @@ service cloud.firestore {
       allow create, update: if false;
     }
 
-    // AI cost per month (YYYY-MM). Written by the server only (Admin SDK).
+    // AI cost per month (YYYY-MM). Admin SDK only: the hub /costs page reads it.
     match /aiUsage/{month} {
-      allow read: if allowed();
+      allow read: if false;
       allow write: if false;
     }
 
