@@ -20,8 +20,10 @@ async function ground<T>(prompt: string, parse: (text: string) => T, fake: () =>
   for (let attempt = 0; attempt < 2; attempt++) {
     let text: string;
     try {
-      text = await generateGrounded(GEMINI_API_KEY.value(), GEMINI_MODEL.value(), prompt);
+      // A search over the trusted sources can take over 2 minutes; the function has 9.
+      text = await generateGrounded(GEMINI_API_KEY.value(), GEMINI_MODEL.value(), prompt, 300_000);
     } catch (err) {
+      logger.warn('grounded call failed', err instanceof Error ? err.message : String(err));
       throw modelError(err);
     }
     try {
@@ -47,9 +49,17 @@ async function buildDigest(uid: string): Promise<string> {
   // Never the same postmortem twice in a row of 8 weeks.
   const skip = recent.docs.map((d) => d.get('postmortem.title')).filter((t): t is string => typeof t === 'string');
 
+  // One failed search keeps the other part; only both failing fails the digest.
+  let failed = 0;
+  const orNone = <T,>(p: Promise<T>, none: T) =>
+    p.catch((err: unknown) => {
+      failed++;
+      if (failed === 2) throw err;
+      return none;
+    });
   const [items, pms, community] = await Promise.all([
-    ground(buildDigestPrompt(profile.context, now), parseDigest, fakeDigest),
-    ground(buildPostmortemPrompt(profile.context, skip), parsePostmortems, fakePostmortems),
+    orNone(ground(buildDigestPrompt(profile.context, now), parseDigest, fakeDigest), [] as ReturnType<typeof parseDigest>),
+    orNone(ground(buildPostmortemPrompt(profile.context, skip), parsePostmortems, fakePostmortems), [] as ReturnType<typeof parsePostmortems>),
     // No AI: titles and links from HN, Lobsters, daily.dev, GitHub and three RSS feeds.
     fetchCommunity(now, DAILY_DEV_TOKEN.value(), fetch, (err) => logger.warn('community source failed', err instanceof Error ? err.message : String(err))),
   ]);
