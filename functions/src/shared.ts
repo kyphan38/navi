@@ -16,6 +16,8 @@ setGlobalOptions({ region: 'asia-southeast1', maxInstances: 2 });
 initializeApp();
 
 export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
+/** daily.dev personal token for the community picks (the owner set it; 'none' in the emulator). */
+export const DAILY_DEV_TOKEN = defineSecret('DAILY_DEV_TOKEN');
 export const ALLOWED_USER_EMAIL = defineString('ALLOWED_USER_EMAIL');
 // Model per step, chosen by the A/B of 2026-11-13 (scripts/ab-finish.mjs, README):
 // writing the drill and scoring it use a strong model (once each, quality matters);

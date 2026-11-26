@@ -11,6 +11,7 @@ import { weekOf } from '@/lib/plan';
 import { PracticePostmortem } from '@/components/PracticeAsk';
 import { watchDigests, type DigestDoc } from '@/lib/repo';
 import { watchSaved, type SavedDoc } from '@/lib/repo-career';
+import Community from '@/components/news/Community';
 import { SaveItem, SavedList } from '@/components/news/Saved';
 import type { NewsItem } from '@/types/navi';
 
@@ -27,7 +28,7 @@ function Out({ href, children }: { href: string; children: string }) {
   );
 }
 
-type SaveCtx = { uid: string; savedUrls: ReadonlySet<string> };
+export type SaveCtx = { uid: string; savedUrls: ReadonlySet<string> };
 
 function Items({ items, save }: { items: NewsItem[]; save: SaveCtx }) {
   return (
@@ -46,21 +47,28 @@ function Items({ items, save }: { items: NewsItem[]; save: SaveCtx }) {
   );
 }
 
+/** "For you: ..." from the model reads as one muted line without the label. */
+const why = (w: string) => w.replace(/^for you:\s*/i, '');
+
+/**
+ * One week, in reading order (2026-11-26 review): the picked posts first, each with
+ * one line on why it matters; then the postmortem to practise; then community picks.
+ */
 function DigestBody({ d, save }: { d: DigestDoc; save: SaveCtx }) {
   const banking = d.items.filter((i) => i.group === 'banking');
   const outside = d.items.filter((i) => i.group !== 'banking');
   return (
-    <div className="space-y-8 text-[15px]">
-      {banking.length > 0 && (
-        <section>
-          <SectionTitle>inside banking</SectionTitle>
-          <Items items={banking} save={save} />
-        </section>
-      )}
+    <div className="space-y-10 text-[15px]">
       {outside.length > 0 && (
         <section>
-          <SectionTitle>outside</SectionTitle>
-          <Items items={outside} save={save} />
+          <SectionTitle>devops and cloud</SectionTitle>
+          <Items items={outside.map((i) => ({ ...i, why: why(i.why) }))} save={save} />
+        </section>
+      )}
+      {banking.length > 0 && (
+        <section>
+          <SectionTitle>banking and payments</SectionTitle>
+          <Items items={banking.map((i) => ({ ...i, why: why(i.why) }))} save={save} />
         </section>
       )}
       {d.postmortem && (
@@ -84,7 +92,8 @@ function DigestBody({ d, save }: { d: DigestDoc; save: SaveCtx }) {
           </p>
         </section>
       )}
-      {!d.items.length && !d.postmortem && <p className="text-muted">Nothing with a working link this week.</p>}
+      {d.community && <Community c={d.community} save={save} />}
+      {!d.items.length && !d.postmortem && !d.community && <p className="text-muted">Nothing with a working link this week.</p>}
     </div>
   );
 }
@@ -124,8 +133,6 @@ export default function NewsView() {
     <main className="column">
       <PageHead title="news" meta={thisWeek.replace('-W', ' week ')} />
 
-      <SavedList uid={uid} items={saved} />
-
       <div className="mt-8">
         {current ? (
           <DigestBody d={current} save={save} />
@@ -140,6 +147,9 @@ export default function NewsView() {
           </div>
         )}
       </div>
+
+      {/* Your reading list after this week's picks, so the new week comes first. */}
+      <SavedList uid={uid} items={saved} />
 
       {older.length > 0 && (
         <section className="mt-12 text-[15px]">

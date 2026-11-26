@@ -43,7 +43,7 @@ test('extractJson reads JSON inside fences and words', () => {
 test('parseDigest and parsePostmortems drop items without a real URL', () => {
   const items = parseDigest(JSON.stringify({ items: [{ title: 'A', url: 'https://x.com/a', group: 'banking' }, { title: 'B', url: 'not a url' }, { title: '', url: 'https://x.com/c' }] }));
   assert.deepEqual(items.map((i) => [i.title, i.group]), [['A', 'banking']]);
-  assert.equal(parseDigest(fakeDigest()).length, 3);
+  assert.equal(parseDigest(fakeDigest()).length, 4);
   assert.equal(parsePostmortems(fakePostmortems())[0].questions.length, 2);
 });
 
@@ -51,7 +51,7 @@ test('keepWorking keeps working links, max 2 banking, max 5, no repeats', async 
   const mk = (n: number, group: NewsItem['group']): NewsItem => ({ title: `t${n}`, url: `https://x.com/${n}`, source: '', group, why: '' });
   const items = [mk(1, 'banking'), mk(2, 'banking'), mk(3, 'banking'), mk(4, 'outside'), mk(5, 'outside'), mk(6, 'outside'), mk(7, 'outside'), mk(8, 'outside')];
   const dead = new Set(['https://x.com/4']);
-  const kept = await keepWorking(items, async (u) => (dead.has(u) ? null : u.replace('x.com', 'final.com')));
+  const kept = await keepWorking(items, async (u) => (dead.has(u) ? null : u.replace('x.com', 'final.com')), [{ name: 'Final', host: 'final.com', topic: 'devops' }]);
   assert.deepEqual(kept.map((k) => k.title), ['t1', 't2', 't5', 't6', 't7']);
   assert.ok(kept.every((k) => k.url.startsWith('https://final.com/')));
 });
@@ -97,4 +97,38 @@ test('oneOnOne lists what happened in the range only', () => {
   assert.ok(text.includes('- 1 new, 1 now known.'));
   assert.ok(text.includes('Write a postmortem (8 Nov)'));
   assert.ok(!text.includes('Drills'));
+});
+
+test('sourceOf: host or subdomain, path when set, a locale before the path', async () => {
+  const { NEWS_SOURCES, POSTMORTEM_SOURCES, sourceOf } = await import('../functions/src/sources.ts');
+  assert.equal(sourceOf('https://blog.cloudflare.com/some-post/', NEWS_SOURCES)?.name, 'Cloudflare Blog');
+  assert.equal(sourceOf('https://www.hashicorp.com/blog/terraform-1-10', NEWS_SOURCES)?.name, 'HashiCorp Blog');
+  assert.equal(sourceOf('https://www.hashicorp.com/products/terraform', NEWS_SOURCES), null);
+  assert.equal(sourceOf('https://aws.amazon.com/blogs/architecture/x/', NEWS_SOURCES)?.name, 'AWS Architecture Blog');
+  assert.equal(sourceOf('https://aws.amazon.com/blogs/gametech/x/', NEWS_SOURCES), null);
+  assert.equal(sourceOf('https://stripe.com/en-gb/blog/payments-at-scale', NEWS_SOURCES)?.name, 'Stripe Blog');
+  assert.equal(sourceOf('https://evilcloudflare.com/x', NEWS_SOURCES), null);
+  assert.equal(sourceOf('not a url', NEWS_SOURCES), null);
+  assert.equal(sourceOf('https://aws.amazon.com/message/41926/', POSTMORTEM_SOURCES)?.name, 'AWS');
+});
+
+test('keepWorking drops untrusted sites, keeps at most 1 AI post, names the source from the list', async () => {
+  const mk = (n: number, url: string): NewsItem => ({ title: `t${n}`, url, source: 'model said', group: 'outside', why: '' });
+  const items = [
+    mk(1, 'https://random-blog.dev/post'),
+    mk(2, 'https://simonwillison.net/2026/Nov/20/a/'),
+    mk(3, 'https://latent.space/p/b'),
+    mk(4, 'https://kubernetes.io/blog/2026/11/20/c/'),
+  ];
+  const kept = await keepWorking(items, async (u) => u);
+  assert.deepEqual(kept.map((k) => [k.title, k.source]), [['t2', "Simon Willison's Weblog"], ['t4', 'Kubernetes Blog']]);
+});
+
+test('digest and postmortem prompts list the trusted sources', async () => {
+  const { buildDigestPrompt, buildPostmortemPrompt } = await import('../functions/src/news.ts');
+  const d = buildDigestPrompt('payment app on AWS', Date.UTC(2026, 10, 26));
+  assert.match(d, /Use ONLY these sources/);
+  assert.match(d, /SRE Weekly \(sreweekly\.com\)/);
+  assert.match(d, /Stripe Blog \(stripe\.com\/blog\/\)/);
+  assert.match(buildPostmortemPrompt('payment app', []), /status\.cloud\.google\.com\/incidents\//);
 });

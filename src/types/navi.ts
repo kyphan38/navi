@@ -186,9 +186,16 @@ export type Milestone = {
 
 // --- Digests (users/{uid}/digests/{YYYY-Www}) - written by Functions ---
 export type NewsItem = { title: string; url: string; source: string; group: 'banking' | 'outside'; why: string };
+export type CommunityThread = { title: string; url: string; discuss: string | null; where: 'hn' | 'lobsters' | 'daily.dev'; score: number };
+export type Community = {
+  threads: CommunityThread[];
+  headlines: { title: string; url: string; site: string }[];
+  repos: { name: string; url: string; description: string; stars: number }[];
+};
 export type Digest = {
   items: NewsItem[];
   postmortem: { title: string; url: string; source: string; summary: string; questions: string[] } | null;
+  community?: Community | null; // titles and links only, no AI (2026-11-26); older digests have none
   createdAt: number;
 };
 

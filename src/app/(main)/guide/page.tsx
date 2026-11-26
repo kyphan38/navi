@@ -120,6 +120,10 @@ const BLOCKS: Block[] = [
     title: 'news',
     lines: [
       'A weekly digest (up to 5 items) and one public postmortem, made every Sunday morning.',
+      'The picks come only from well-known sources: engineering blogs (Cloudflare, Kubernetes, HashiCorp, Grafana, GitHub, Netflix, Fly.io, Tailscale), newsletters (SRE Weekly, DevOps Weekly, The Pragmatic Engineer, ByteByteGo), AWS blogs, at most one AI post, and payments blogs (Stripe, Monzo, Nubank). Each has one line on what to do or check at work.',
+      'Order: devops and cloud, banking and payments, the postmortem of the week (practice this replays it as a drill), then community.',
+      'community has no AI: posts discussed on Hacker News, Lobsters and your daily.dev feed (the number opens the comments), headlines from InfoQ, The New Stack and The Register, and new GitHub repos. Only DevOps and Platform topics, no AI product news.',
+      'save keeps any link in your reading list, under this week.',
       'practice this under the postmortem replays that real incident as a drill, at your highest open level.',
       'get this week makes it now. Every link was opened and checked before it was saved.',
       'save under an item keeps it, with one line on what you take from it. Saved items sit at the top; mark them read when done.',

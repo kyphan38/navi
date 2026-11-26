@@ -600,3 +600,12 @@ Ghi chú khi làm:
 - Làm gọn UI (2026-11-26, chủ app duyệt mockup): nav 6 mục; Map chỉ còn route, track, skills (gập theo trụ cột),
   history, còn "what if" và milestones mở bằng chữ dưới route; trang `career` mới; Drill: bài hôm nay + redo trên cùng,
   mỗi nhóm một dòng tên bài, bấm mới mở; "to fix" và history gập.
+- Nguồn tin News (2026-11-26, chủ app yêu cầu "cụ thể, uy tín"): digest và postmortem chỉ lấy từ danh sách
+  `functions/src/sources.ts` (engineering blog, newsletter có trang web, AWS blog, blog payments). Link ngoài danh sách
+  bị bỏ, tối đa 1 bài AI. Không dùng nguồn tổng hợp (Hacker News, Lobsters, daily.dev), bản tin chỉ có email, podcast,
+  và trang chặn bộ kiểm link (Uber 406, Finextra 403).
+- News `community` (2026-11-26): không dùng AI, chỉ tiêu đề + link, lọc theo 5 trụ cột: Hacker News (Algolia API),
+  Lobsters (JSON theo tag), daily.dev (Public API, token cá nhân trong secret `DAILY_DEV_TOKEN`), repo GitHub mới
+  (Search API), tiêu đề RSS của InfoQ, The New Stack (feed theo chuyên mục) và The Register (lọc theo chuyên mục trong URL).
+  Không dùng TechCrunch, Wired (chủ app bỏ). Trang News xếp lại: devops and cloud, banking and payments, postmortem,
+  community, rồi danh sách đã lưu. Dòng "why" của AI: một việc cụ thể để làm hoặc kiểm tra, không giải thích trong ngoặc.

@@ -2,6 +2,7 @@
 // The model searches the web (Google Search grounding), but its links are often
 // slightly wrong (a 404 path), so every link is opened before it is saved.
 
+import { NEWS_SOURCES, POSTMORTEM_SOURCES, sourceLines, sourceOf, type Source } from './sources.ts';
 import { PLAIN_ENGLISH } from './style.ts';
 
 export type NewsItem = { title: string; url: string; source: string; group: 'banking' | 'outside'; why: string };
@@ -15,22 +16,36 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short
 export function buildDigestPrompt(context: string, now: number): string {
   return `${PLAIN_ENGLISH}
 
-Today is ${dateFmt.format(now)}. Search the web for news from the last 7 days that matter to a DevOps / SRE engineer
-who works on a ${context}.
-Find 8 candidates: 3 about banking or payments technology ("banking"), 5 about DevOps, SRE, cloud security,
-AWS or AI for operations ("outside"). Prefer official sources (AWS, CNCF, vendors' blogs, big tech news sites).
-Use the exact article URL you read, not a home page.
+Today is ${dateFmt.format(now)}. Search the web for posts from the last 7 days that matter to a DevOps / Platform
+engineer who works on a ${context}.
+Use ONLY these sources. A post from any other site will be thrown away.
+
+DevOps, SRE, platform and cloud ("outside"):
+${sourceLines(NEWS_SOURCES, ['devops', 'cloud'])}
+
+AI engineering ("outside", at most 1 candidate):
+${sourceLines(NEWS_SOURCES, ['ai'])}
+
+Banking and payments technology ("banking"):
+${sourceLines(NEWS_SOURCES, ['payments'])}
+
+Find 8 candidates: 2 "banking" and 6 "outside". Pick deep technical posts: an incident, a design, a migration,
+a security issue, a new feature with numbers. Skip product marketing, pricing plans, events and summits,
+customer stories and opinion. Use the exact post URL you read, not a home page or a tag page.
 
 Return ONLY JSON, no other text:
 {"items":[{"title":"","url":"","source":"","group":"banking or outside","why":""}]}
-"why": one sentence, 20 words or less, starting with "For you:" - what it means for this engineer's daily work.`;
+"why": one sentence, 20 words or less: what this engineer can do or check at work because of it
+(for example "Check if your EKS nodes use the old AMI."). No "For you:" label, no hype,
+no explanations in brackets: this line must stay short.`;
 }
 
 export function buildPostmortemPrompt(context: string, skip: string[]): string {
   return `${PLAIN_ENGLISH}
 
-Search the web for real public postmortems (incident reports) from well-known companies (AWS, Cloudflare, GitHub,
-Google Cloud, Slack, Atlassian, Stripe...). Pick 3 candidates that teach something useful to an engineer on a ${context}.
+Search the web for real public postmortems (incident reports). Use ONLY these sources; others are thrown away:
+${sourceLines(POSTMORTEM_SOURCES)}
+Pick 3 candidates that teach something useful to an engineer on a ${context}.
 ${skip.length ? `Do not pick these again: ${skip.join('; ')}.\n` : ''}Use the exact URL of the report.
 
 Return ONLY JSON, no other text:
@@ -106,18 +121,28 @@ export async function checkLink(url: string, fetchImpl: typeof fetch = fetch): P
 }
 
 /**
- * Up to 5 items with working links, at most 2 "banking", no repeated URL.
+ * Up to 5 items with working links from a trusted source, at most 2 "banking" and
+ * 1 AI post, no repeated URL. The source name comes from the list, not the model.
  * `check` returns the final URL or null.
  */
-export async function keepWorking(items: NewsItem[], check: (url: string) => Promise<string | null>): Promise<NewsItem[]> {
+export async function keepWorking(
+  items: NewsItem[],
+  check: (url: string) => Promise<string | null>,
+  sources: readonly Source[] = NEWS_SOURCES,
+): Promise<NewsItem[]> {
   const checked = await Promise.all(items.map(async (i) => ({ ...i, url: (await check(i.url)) ?? '' })));
   const out: NewsItem[] = [];
   const seen = new Set<string>();
+  let ai = 0;
   for (const i of checked) {
     if (!i.url || seen.has(i.url)) continue;
+    const src = sourceOf(i.url, sources);
+    if (!src) continue;
     if (i.group === 'banking' && out.filter((x) => x.group === 'banking').length >= 2) continue;
+    if (src.topic === 'ai' && ai >= 1) continue;
+    if (src.topic === 'ai') ai++;
     seen.add(i.url);
-    out.push(i);
+    out.push({ ...i, source: src.name });
     if (out.length === MAX_ITEMS) break;
   }
   return out;
@@ -128,8 +153,9 @@ export async function keepWorking(items: NewsItem[], check: (url: string) => Pro
 export function fakeDigest(): string {
   return JSON.stringify({
     items: [
-      { title: 'AWS What is new', url: 'https://aws.amazon.com/new/', source: 'AWS', group: 'outside', why: 'For you: new AWS features each week.' },
-      { title: 'Google SRE book', url: 'https://sre.google/sre-book/table-of-contents/', source: 'Google', group: 'outside', why: 'For you: the base of SRE work.' },
+      { title: 'Kubernetes Blog', url: 'https://kubernetes.io/blog/', source: 'Kubernetes', group: 'outside', why: 'For you: what changes in each Kubernetes release.' },
+      { title: 'AWS Architecture Blog', url: 'https://aws.amazon.com/blogs/architecture/', source: 'AWS', group: 'outside', why: 'For you: real designs on AWS.' },
+      { title: 'Not a trusted source', url: 'https://sre.google/sre-book/table-of-contents/', source: 'Google', group: 'outside', why: 'For you: should be dropped.' },
       { title: 'Broken link', url: 'https://aws.amazon.com/this-page-does-not-exist-navi/', source: 'AWS', group: 'banking', why: 'For you: should be dropped.' },
     ],
   });

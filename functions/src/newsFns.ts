@@ -9,8 +9,10 @@ import { logger } from 'firebase-functions';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import { onSchedule } from 'firebase-functions/scheduler';
 import { generateGrounded } from './gemini.ts';
+import { fetchCommunity } from './community.ts';
+import { POSTMORTEM_SOURCES, sourceOf } from './sources.ts';
 import { buildDigestPrompt, buildPostmortemPrompt, checkLink, fakeDigest, fakePostmortems, keepWorking, parseDigest, parsePostmortems, weekIdAt } from './news.ts';
-import { GEMINI_API_KEY, ALLOWED_USER_EMAIL, GEMINI_MODEL, OPTS, fakeAi, guard, modelError, loadProfile } from './shared.ts';
+import { GEMINI_API_KEY, DAILY_DEV_TOKEN, ALLOWED_USER_EMAIL, GEMINI_MODEL, OPTS, fakeAi, guard, modelError, loadProfile } from './shared.ts';
 
 async function ground<T>(prompt: string, parse: (text: string) => T, fake: () => string): Promise<T> {
   if (fakeAi()) return parse(fake());
@@ -45,9 +47,11 @@ async function buildDigest(uid: string): Promise<string> {
   // Never the same postmortem twice in a row of 8 weeks.
   const skip = recent.docs.map((d) => d.get('postmortem.title')).filter((t): t is string => typeof t === 'string');
 
-  const [items, pms] = await Promise.all([
+  const [items, pms, community] = await Promise.all([
     ground(buildDigestPrompt(profile.context, now), parseDigest, fakeDigest),
     ground(buildPostmortemPrompt(profile.context, skip), parsePostmortems, fakePostmortems),
+    // No AI: titles and links from HN, Lobsters, daily.dev, GitHub and three RSS feeds.
+    fetchCommunity(now, DAILY_DEV_TOKEN.value(), fetch, (err) => logger.warn('community source failed', err instanceof Error ? err.message : String(err))),
   ]);
   const check = (url: string) => checkLink(url);
   const news = await keepWorking(items, check);
@@ -55,19 +59,28 @@ async function buildDigest(uid: string): Promise<string> {
   for (const p of pms) {
     if (skip.includes(p.title)) continue;
     const url = await check(p.url);
-    if (url) {
-      postmortem = { ...p, url };
+    const src = url ? sourceOf(url, POSTMORTEM_SOURCES) : null;
+    if (url && src) {
+      postmortem = { ...p, url, source: src.name };
       break;
     }
   }
-  await col.doc(id).set({ items: news, postmortem, createdAt: now });
-  logger.info('digest saved', { week: id, items: news.length, postmortem: !!postmortem, candidates: items.length });
+  await col.doc(id).set({ items: news, postmortem, community, createdAt: now });
+  logger.info('digest saved', {
+    week: id,
+    items: news.length,
+    postmortem: !!postmortem,
+    candidates: items.length,
+    threads: community.threads.length,
+    headlines: community.headlines.length,
+    repos: community.repos.length,
+  });
   return id;
 }
 
 /** Sunday 06:00 Vietnam time: the digest for the one allowed user. */
 export const weeklyDigest = onSchedule(
-  { schedule: '0 6 * * 0', timeZone: 'Asia/Ho_Chi_Minh', secrets: [GEMINI_API_KEY], timeoutSeconds: 540, memory: '512MiB' },
+  { schedule: '0 6 * * 0', timeZone: 'Asia/Ho_Chi_Minh', secrets: [GEMINI_API_KEY, DAILY_DEV_TOKEN], timeoutSeconds: 540, memory: '512MiB' },
   async () => {
     const user = await getAuth().getUserByEmail(ALLOWED_USER_EMAIL.value());
     await buildDigest(user.uid);
@@ -75,7 +88,7 @@ export const weeklyDigest = onSchedule(
 );
 
 /** The same digest on demand (the News page button). At most once an hour. */
-export const newsNow = onCall({ ...OPTS, timeoutSeconds: 540 }, async (req) => {
+export const newsNow = onCall({ ...OPTS, secrets: [GEMINI_API_KEY, DAILY_DEV_TOKEN], timeoutSeconds: 540 }, async (req) => {
   const uid = guard(req.auth);
   const snap = await getFirestore().doc(`users/${uid}/digests/${weekIdAt(Date.now())}`).get();
   const at = snap.get('createdAt');

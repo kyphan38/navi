@@ -51,12 +51,13 @@ writeFileSync('functions/.env', lines.join('\n') + '\n');
 console.log('functions/.env written');
 
 if (key) {
-  writeFileSync('functions/.secret.local', `GEMINI_API_KEY=${key}\n`);
+  // DAILY_DEV_TOKEN stays in Secret Manager only; 'none' makes the emulator skip daily.dev.
+  writeFileSync('functions/.secret.local', `GEMINI_API_KEY=${key}\nDAILY_DEV_TOKEN=none\n`);
   writeFileSync('functions/.env.local', 'NAVI_FAKE_AI=0\n');
   console.log('functions/.secret.local written (emulator only)');
 } else {
   // No key: the emulator answers drills with canned data, so the UI can be tested.
-  writeFileSync('functions/.secret.local', 'GEMINI_API_KEY=none\n');
+  writeFileSync('functions/.secret.local', 'GEMINI_API_KEY=none\nDAILY_DEV_TOKEN=none\n');
   writeFileSync('functions/.env.local', 'NAVI_FAKE_AI=1\n');
   console.log('GEMINI_API_KEY not in .env.local: the emulator uses fake AI answers.');
 }
