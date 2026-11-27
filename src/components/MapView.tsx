@@ -15,6 +15,7 @@ import { useMapData } from '@/hooks/useMapData';
 import { useMistakes } from '@/hooks/useMistakes';
 import { useNow } from '@/hooks/useNow';
 import { dateFor, isDone, minutesLeft } from '@/lib/forecast';
+import Hint from '@/components/Hint';
 
 function SectionTitle({ children }: { children: string }) {
   return <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">{children}</h2>;
@@ -63,6 +64,7 @@ export default function MapView() {
   return (
     <main className="column md:max-w-[48rem]">
       <PageHead title="map" meta={`${atLevel}/${skills.length} skills started`} />
+      <Hint id="map" full="Good drills and done modules count for your skills." short="drills count" />
 
       <section className="mt-8">
         <MapRoute stops={stops} />

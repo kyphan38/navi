@@ -15,6 +15,7 @@ import { CONCEPTS, DECKS } from '@/lib/basics-catalog';
 import { explainPick, labPick, nextReviewIn, sessionSteps } from '@/lib/basics';
 import { parseDay } from '@/lib/day';
 import type { BasicState } from '@/types/navi';
+import LoopLine from '@/components/LoopLine';
 
 function SectionTitle({ children }: { children: string }) {
   return <h2 className="mb-3 font-mono text-[12px] tracking-[0.12em] text-faint">{children}</h2>;
@@ -120,6 +121,7 @@ export default function BasicsView() {
   return (
     <main className="column">
       <PageHead title="basics" meta={steps.length ? `${doneCount}/${steps.length}` : undefined} />
+      <LoopLine />
 
       <section className="mt-8">
         {busy ? (

@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 
 import { useUid } from '@/components/AuthGate';
 import { DrillLog } from '@/components/DrillLog';
+import Hint from '@/components/Hint';
 import Prose from '@/components/Prose';
 import Waiting from '@/components/Waiting';
 import { useDrills } from '@/hooks/useDrills';
@@ -25,6 +26,31 @@ function Squares({ value }: { value: number }) {
         <span key={n} className={`size-2.5 rounded-[2px] border ${n <= value ? 'border-ink bg-ink' : 'border-line-strong'}`} />
       ))}
     </span>
+  );
+}
+
+/** Where this drill's results went (PLAN-guide G4): real counts, each a link to its page. */
+function WhereItWent({ terms, mistakes }: { terms: number; mistakes: number }) {
+  const rows = [
+    terms > 0 && { what: `${terms} ${terms === 1 ? 'term' : 'terms'}`, href: '/terms/', where: 'terms' },
+    mistakes > 0 && { what: `${mistakes} ${mistakes === 1 ? 'mistake' : 'mistakes'}`, href: '/review/', where: 'review' },
+  ].filter((r): r is { what: string; href: string; where: string } => !!r);
+  if (!rows.length) return null;
+  return (
+    <section>
+      <SectionTitle>where this went</SectionTitle>
+      <Hint id="debrief" full="What you missed goes to terms and review by itself." short="misses go to review" />
+      <ul className="mt-2 divide-y divide-line border-y border-line">
+        {rows.map((r) => (
+          <li key={r.href}>
+            <Link href={r.href} className="group flex items-baseline gap-4 py-2.5">
+              <span className="w-28 shrink-0 text-ink">{r.what}</span>
+              <span className="text-muted transition-colors group-hover:text-ink after:ml-1 after:content-['›']">{r.where}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -168,6 +194,8 @@ export default function Debrief({ drill }: { drill: DrillDoc }) {
           </div>
         )}
       </section>
+
+      <WhereItWent terms={drill.newTerms.length} mistakes={mistakes.length} />
 
       <div className="flex items-center gap-5">
         {busy ? (

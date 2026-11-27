@@ -8,6 +8,7 @@ import PageHead from '@/components/PageHead';
 import { useAuth } from '@/contexts/AuthContext';
 import { dayOf } from '@/lib/day';
 import { buildExport, exportFilename } from '@/lib/export';
+import { hintCounts, hintsOnStore } from '@/lib/hint-store';
 import { applyTheme, themeStore, type Theme } from '@/lib/prefs';
 import { DEFAULT_PROFILE, PROFILE_LIMITS } from '@/lib/profile';
 import { readAllForExport, saveProfile, watchProfile } from '@/lib/repo';
@@ -49,6 +50,43 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
       <span className="shrink-0 text-muted">{label}</span>
       {children}
     </div>
+  );
+}
+
+/** Page hints fade out by themselves; this turns them off or starts them again. */
+function HintsRow() {
+  const on = useSyncExternalStore(hintsOnStore.subscribe, hintsOnStore.get, hintsOnStore.getServer);
+  const [reset, setReset] = useState(false);
+  return (
+    <Row label="hints">
+      <div className="flex gap-4">
+        <div className="flex gap-4" role="radiogroup" aria-label="Hints">
+          {(['on', 'off'] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={v === on}
+              onClick={() => hintsOnStore.set(v)}
+              className={v === on ? 'text-ink' : 'text-faint hover:text-muted'}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            hintCounts.reset();
+            hintsOnStore.set('on');
+            setReset(true);
+          }}
+          className="text-faint hover:text-ink"
+        >
+          {reset ? 'shown again' : 'show again'}
+        </button>
+      </div>
+    </Row>
   );
 }
 
@@ -150,6 +188,7 @@ export default function SettingsView() {
             ))}
           </div>
         </Row>
+        <HintsRow />
       </section>
 
       <section className="mt-10 text-[15px]">

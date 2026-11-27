@@ -118,6 +118,7 @@ textarea:focus-visible {
 /* Content column: sits next to the rail, left-aligned (not centered like
    legi/hodi). 20px margins on a phone. */
 .column {
+  position: relative; /* margin hints (Hint.tsx) sit to its right */
   width: 100%;
   max-width: 40rem;
   padding: 20px 20px 96px;
@@ -158,6 +159,11 @@ textarea:focus-visible {
 }
 
 /* Draws a path from start to end when a step is done (needs pathLength="1"). */
+/* The rail's rows have a 10px inset dot, so the track moves with it. */
+.rail-route::before {
+  left: 13px;
+}
+
 @keyframes route-draw {
   from {
     stroke-dashoffset: 1;

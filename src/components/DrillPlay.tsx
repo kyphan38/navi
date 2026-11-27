@@ -14,6 +14,7 @@ import Waiting from '@/components/Waiting';
 import { aiError, answerDrill, finishDrill } from '@/lib/ai';
 import { ROUNDS, typeLabel } from '@/lib/drills';
 import { dropDrill, watchDrill, type DrillDoc } from '@/lib/repo';
+import LoopLine from '@/components/LoopLine';
 
 export default function DrillPlay() {
   const uid = useUid();
@@ -93,6 +94,7 @@ export default function DrillPlay() {
   return (
     <main className="column">
       <PageHead title={`${typeLabel(drill.type)} · ${drill.level}`} meta={meta} />
+      <LoopLine />
       <div className="mt-1 flex items-baseline justify-between gap-4">
         <p className="min-w-0 truncate text-[14px] text-faint">{drill.topic}</p>
         <div className="flex shrink-0 gap-4 font-mono text-[12px] text-faint">

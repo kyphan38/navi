@@ -15,6 +15,8 @@ import { dayOf } from '@/lib/day';
 import { bumpDayReviews, updateMistake, updateTerm, watchDaysSince } from '@/lib/repo';
 import { reviewPatch } from '@/lib/terms';
 import { pillarIds } from '@/lib/track';
+import Hint from '@/components/Hint';
+import LoopLine from '@/components/LoopLine';
 
 type Item = { kind: 'term' | 'mistake'; id: string; nextReviewAt: number | null };
 
@@ -81,6 +83,8 @@ export default function Review() {
   return (
     <main className="column">
       <PageHead title="review" meta={queue && !finished ? `${index + 1}/${items.length}` : undefined} />
+      <LoopLine />
+      <Hint id="review" full="Due terms and drill mistakes, at most 5 a day." short="5 a day" />
 
       {finished ? (
         <div className="mt-10 text-[15px]">

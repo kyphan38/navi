@@ -16,19 +16,25 @@ export default function PageHead({ title, meta }: { title: string; meta?: ReactN
   return (
     <header className="flex items-baseline justify-between gap-4">
       {pages.length && current ? (
-        <nav aria-label="Pages here" className="flex gap-4 font-mono text-[13px] tracking-[0.12em]">
-          {pages.map((p) =>
-            p.href === current ? (
-              <h1 key={p.href} aria-current="page" className="text-ink">
-                {p.label}
-              </h1>
-            ) : (
-              <Link key={p.href} href={p.href} className="text-faint transition-colors hover:text-ink">
-                {p.label}
-              </Link>
-            ),
-          )}
-        </nav>
+        <>
+          {/* Phones only: the rail lists these pages on wide screens. */}
+          <nav aria-label="Pages here" className="flex gap-4 font-mono text-[13px] tracking-[0.12em] md:hidden">
+            {pages.map((p) =>
+              p.href === current ? (
+                <h1 key={p.href} aria-current="page" className="text-ink">
+                  {p.label}
+                </h1>
+              ) : (
+                <Link key={p.href} href={p.href} className="text-faint transition-colors hover:text-ink">
+                  {p.label}
+                </Link>
+              ),
+            )}
+          </nav>
+          <h1 className="hidden font-mono text-[13px] tracking-[0.12em] text-ink md:block">
+            {pages.find((p) => p.href === current)?.label}
+          </h1>
+        </>
       ) : (
         <h1 className="font-mono text-[13px] tracking-[0.12em] text-muted">{title}</h1>
       )}

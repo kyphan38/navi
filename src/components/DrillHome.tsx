@@ -11,6 +11,7 @@ import { useTodayDrill } from '@/hooks/useTodayDrill';
 import { DRILL_TYPES, GROUPS, doneOfType, openLevels, scorePercent, typeLabel, unlockProgress } from '@/lib/drills';
 import { dueItems } from '@/lib/leitner';
 import type { DrillLevel, DrillType } from '@/types/navi';
+import LoopLine from '@/components/LoopLine';
 
 const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
 const ALL: readonly DrillLevel[] = ['easy', 'medium', 'hard'];
@@ -102,6 +103,7 @@ export default function DrillHome() {
   return (
     <main className="column">
       <PageHead title="drill" meta={history.length ? `${history.length} done` : undefined} />
+      <LoopLine />
 
       <section className="mt-8 space-y-2 text-[15px]">
         {active && (

@@ -18,6 +18,7 @@ import { dueItems } from '@/lib/leitner';
 import { deleteTerm, updateTerm, type TermDoc } from '@/lib/repo';
 import { CHECKLIST, groupByArea, missingDrillTerms, reviewPatch, statusPatch, studyPrompt } from '@/lib/terms';
 import type { Term } from '@/types/navi';
+import Hint from '@/components/Hint';
 
 type Filter = 'all' | Term['status'];
 const FILTERS: readonly Filter[] = ['all', 'new', 'learning', 'known'];
@@ -139,6 +140,7 @@ export default function TermsView() {
   return (
     <main className="column">
       <PageHead title="terms" meta={terms ? `${list.length}${due ? ` · ${due} due` : ''}` : undefined} />
+      <Hint id="terms" full="Drills add terms here. Due ones show up in review." short="due ones go to review" />
 
       <form onSubmit={submit} className="mt-8 flex items-center gap-4">
         <input

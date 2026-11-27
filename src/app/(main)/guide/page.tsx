@@ -10,7 +10,11 @@ const BLOCKS: Block[] = [
     title: 'places',
     lines: [
       'Six places: today, practice, learn, map, career, settings.',
-      'practice holds drill, interview, review and basics. learn holds your courses, terms and news. career holds your target role, ask a senior, stories, 1:1 prep and the brag doc. Switch between them with the words at the top of the page.',
+      'practice holds drill, interview, review and basics. learn holds your courses, terms and news. career holds your target role, ask a senior, stories, 1:1 prep and the brag doc.',
+      'On a wide screen the rail on the left lists every page under its place. review shows how many items are due. On a phone, switch pages with the words at the top of the page.',
+      'drill, basics and review show today\'s loop at the top: a gray dot is done, the black dot is where you are.',
+      'After a drill, where this went shows what moved: new terms to terms, mistakes to review.',
+      'Some pages have a small hint. It shows in full 3 times, then in a few words, then it goes away.',
     ],
   },
   {
@@ -154,7 +158,7 @@ const BLOCKS: Block[] = [
     title: 'settings',
     lines: [
       'Profile: role, years, work, focus and hours a week. The AI uses it, and the plan uses the hours.',
-      'Theme, and export .json for a copy of everything.',
+      'Theme, hints (on, off, or show again), and export .json for a copy of everything.',
     ],
   },
 ];
