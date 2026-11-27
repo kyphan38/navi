@@ -19,15 +19,16 @@ export const GEMINI_API_KEY = defineSecret('GEMINI_API_KEY');
 /** daily.dev personal token for the community picks (the owner set it; 'none' in the emulator). */
 export const DAILY_DEV_TOKEN = defineSecret('DAILY_DEV_TOKEN');
 export const ALLOWED_USER_EMAIL = defineString('ALLOWED_USER_EMAIL');
-// Model per step, chosen by the A/B of 2026-11-13 (scripts/ab-finish.mjs, README):
+// Model per step, chosen by the A/B of 2026-11-13 (scripts/ab-finish.mjs, README) and the
+// upkeep/ai-evals run of 2026-11-28 (carbon:low over hydrogen: same quality, faster, cheaper):
 // writing the drill and scoring it use a strong model (once each, quality matters);
 // the rounds use Flash low, because the learner waits on every round.
 // GEMINI_THINKING_* = 'none' sends no thinking level (models without levels).
 export const GEMINI_MODEL = defineString('GEMINI_MODEL', { default: 'gemini-3.8-flash' });
-export const GEMINI_MODEL_START = defineString('GEMINI_MODEL_START', { default: 'gemini-4-hydrogen' });
-export const GEMINI_THINKING_START = defineString('GEMINI_THINKING_START', { default: 'none' });
-export const GEMINI_MODEL_FINISH = defineString('GEMINI_MODEL_FINISH', { default: 'gemini-4-hydrogen' });
-export const GEMINI_THINKING_FINISH = defineString('GEMINI_THINKING_FINISH', { default: 'none' });
+export const GEMINI_MODEL_START = defineString('GEMINI_MODEL_START', { default: 'gemini-4-carbon' });
+export const GEMINI_THINKING_START = defineString('GEMINI_THINKING_START', { default: 'low' });
+export const GEMINI_MODEL_FINISH = defineString('GEMINI_MODEL_FINISH', { default: 'gemini-4-carbon' });
+export const GEMINI_THINKING_FINISH = defineString('GEMINI_THINKING_FINISH', { default: 'low' });
 
 export function thinkingOf(v: string): Thinking | undefined {
   return v === 'low' || v === 'medium' || v === 'high' ? v : undefined;
