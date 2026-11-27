@@ -6,6 +6,7 @@ import MapRoute, { type RouteStop } from '@/components/MapRoute';
 import MapWhatIf from '@/components/MapWhatIf';
 import PageHead from '@/components/PageHead';
 import Waiting from '@/components/Waiting';
+import BasicsLine from '@/components/map/BasicsLine';
 import Heatmap from '@/components/map/Heatmap';
 import Milestones from '@/components/map/Milestones';
 import Skills from '@/components/map/Skills';
@@ -96,6 +97,7 @@ export default function MapView() {
           {tagError && <span className="text-[13px] text-muted">{tagError}</span>}
         </div>
         <Skills skills={skills} now={now} />
+        <BasicsLine />
       </section>
 
       <section className="mt-10">

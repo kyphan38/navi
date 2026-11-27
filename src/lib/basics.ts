@@ -132,3 +132,52 @@ export function asCodeBlock(text: string): string {
     .trim();
   return '```\n' + body + '\n```';
 }
+
+/**
+ * The order an "order" question shows its steps in: a fixed shuffle from a seed
+ * (the card id), never the right order itself when there are 2 or more steps.
+ */
+export function shuffled(n: number, seed: string): number[] {
+  let h = 2166136261;
+  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const idx = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+    const j = h % (i + 1);
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  if (n > 1 && idx.every((v, i) => v === i)) idx.push(idx.shift()!);
+  return idx;
+}
+
+/** An "order" answer is right when the picked steps are 0, 1, 2... */
+export function orderRight(picks: readonly number[], n: number): boolean {
+  return picks.length === n && picks.every((p, i) => p === i);
+}
+
+/**
+ * Weekly "explain it back": a concept you know fairly well (box 3+ or learned),
+ * not explained in the last 30 days, the one reviewed longest ago. Only once a week.
+ */
+export function explainPick(states: ReadonlyMap<string, BasicState>, now: number): string | null {
+  const last = Math.max(0, ...[...states.values()].map((s) => s.explainedAt ?? 0));
+  if (now - last < 7 * DAY) return null;
+  const ok = [...states.entries()].filter(
+    ([id, s]) => CONCEPTS.some((c) => c.id === id) && (s.status === 'learned' || s.box >= 3) && now - (s.explainedAt ?? 0) >= 30 * DAY,
+  );
+  ok.sort((a, b) => a[1].updatedAt - b[1].updatedAt);
+  return ok[0]?.[0] ?? null;
+}
+
+/**
+ * Weekend lab (Saturday and Sunday): a concept you have reviewed at least once
+ * (box 2+ or learned), linked to a skill, with no lab done yet; oldest first.
+ */
+export function labPick(states: ReadonlyMap<string, BasicState>, weekend: boolean): string | null {
+  if (!weekend) return null;
+  const ok = CONCEPTS.filter((c) => {
+    const s = states.get(c.id);
+    return !!s && c.skills.length > 0 && !s.labDoneAt && (s.status === 'learned' || (s.status === 'learning' && s.box >= 2));
+  });
+  return ok[0]?.id ?? null;
+}

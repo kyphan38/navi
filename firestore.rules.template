@@ -151,12 +151,14 @@ service cloud.firestore {
 
     // Basics (PLAN-basics.md 6): the learner's state per concept.
     function validBasic(d) {
-      return d.keys().hasOnly(['deck','status','readAt','box','nextReviewAt','lastKind','blindSpots','stuck','stuckAt','updatedAt'])
+      return d.keys().hasOnly(['deck','status','readAt','box','nextReviewAt','lastKind','blindSpots','stuck','stuckAt','explainedAt','labDoneAt','updatedAt'])
+        && (!('explainedAt' in d) || optInt(d.explainedAt))
+        && (!('labDoneAt' in d) || optInt(d.labDoneAt))
         && str(d.deck, 40)
         && d.status in ['reading','learning','learned']
         && optInt(d.readAt)
         && box(d.box) && optInt(d.nextReviewAt)
-        && (d.lastKind == null || d.lastKind in ['predict','myth'])
+        && (d.lastKind == null || d.lastKind in ['predict','myth','command','order'])
         && d.blindSpots is int && d.blindSpots >= 0
         && d.stuck is int && d.stuck >= 0
         && d.stuckAt is list && d.stuckAt.size() <= 5
@@ -274,6 +276,10 @@ service cloud.firestore {
     }
     // Lessons and the day's session are written by Functions only.
     match /users/{uid}/basicLessons/{id} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    match /users/{uid}/basicLabs/{id} {
       allow read: if isOwner(uid);
       allow write: if false;
     }

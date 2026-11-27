@@ -12,8 +12,9 @@ export type StateLite = {
   status: 'reading' | 'learning' | 'learned';
   box: number;
   nextReviewAt: number | null;
-  lastKind: 'predict' | 'myth' | null;
+  lastKind: Kind | null;
   stuckAt: number[];
+  updatedAt?: number;
 };
 
 /** Started = the check after the lesson was answered (learning or learned). */
@@ -71,12 +72,49 @@ export function deckStuck(deck: string, states: ReadonlyMap<string, StateLite>, 
   return n >= STUCK_LIMIT;
 }
 
-/** The other kind than last time, so a review never repeats the same angle. */
-export function nextKind(last: 'predict' | 'myth' | null): 'predict' | 'myth' {
-  return last === 'predict' ? 'myth' : 'predict';
+export type Kind = 'predict' | 'myth' | 'command' | 'order';
+/** Review kinds in turn, so a review never repeats the angle of the last one. */
+export const KINDS: readonly Kind[] = ['predict', 'myth', 'command', 'order'];
+
+export function nextKind(last: Kind | null): Kind {
+  return last ? KINDS[(KINDS.indexOf(last) + 1) % KINDS.length] : 'predict';
 }
 
 /** Day id 'YYYY-MM-DD' in Vietnam time (UTC+7, no daylight saving), the same days as the app. */
 export function vnDay(now: number): string {
   return new Date(now + 7 * 3_600_000).toISOString().slice(0, 10);
+}
+
+/** What the learner is working on now: skills of the running track and of recent drills, recent term names. */
+export type WorkSignals = { skills: ReadonlySet<string>; terms: readonly string[] };
+export const LINK_REST_DAYS = 3;
+
+/**
+ * One concept already learned that fits the learner's current work, for a
+ * "linked" card when fewer than 2 reviews are due (PLAN-basics.md 10). A concept
+ * scores one point per shared skill and per recent term found in its name or
+ * focus; it must not be in today's reviews nor touched in the last 3 days.
+ * Returns the best one and the work it links to, or null.
+ */
+export function linkedConcept(
+  states: ReadonlyMap<string, StateLite>,
+  work: WorkSignals,
+  exclude: readonly string[],
+  now: number,
+  catalog: readonly Concept[] = CONCEPTS,
+): { id: string; skill: string | null; term: string | null } | null {
+  let best: { id: string; score: number; at: number; skill: string | null; term: string | null } | null = null;
+  for (const c of catalog) {
+    const s = states.get(c.id);
+    if (!s || s.status === 'reading' || exclude.includes(c.id)) continue;
+    if (s.updatedAt !== undefined && now - s.updatedAt < LINK_REST_DAYS * DAY) continue;
+    const skills = c.skills.filter((k) => work.skills.has(k));
+    const text = `${c.name} ${c.focus}`.toLowerCase();
+    const terms = work.terms.filter((t) => t.length >= 3 && text.includes(t.toLowerCase()));
+    const score = skills.length + terms.length;
+    if (score === 0) continue;
+    const at = s.updatedAt ?? 0;
+    if (!best || score > best.score || (score === best.score && at < best.at)) best = { id: c.id, score, at, skill: skills[0] ?? null, term: terms[0] ?? null };
+  }
+  return best && { id: best.id, skill: best.skill, term: best.term };
 }

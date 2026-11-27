@@ -105,6 +105,10 @@ const basic = { deck: 'linux', status: 'learning', readAt: 1, box: 2, nextReview
 await expect('owner writes a valid basics state', true, () => setDoc(mine('basics', 'rules-check'), basic));
 await expect('owner writes a basics state with box 9', false, () => setDoc(mine('basics', 'rules-check'), { ...basic, box: 9 }));
 await expect('owner writes a basic lesson', false, () => setDoc(mine('basicLessons', 'process'), { problem: 'x' }));
+await expect('owner writes a basics state with explain and lab dates', true, () =>
+  setDoc(mine('basics', 'rules-check'), { ...basic, explainedAt: 2, labDoneAt: null }),
+);
+await expect('owner writes a basic lab', false, () => setDoc(mine('basicLabs', 'process'), { title: 'x' }));
 await expect('owner creates a basic card', false, () => setDoc(mine('basicCards', '2000-01-01_process'), { prompt: 'x' }));
 await deleteDoc(mine('basics', 'rules-check')).catch(() => {});
 

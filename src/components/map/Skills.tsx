@@ -48,7 +48,7 @@ function SkillDetail({ s, areas }: { s: SkillView; areas: string[] }) {
                   ))
                 ) : (
                   <span className="text-faint">
-                    {l === 1 ? 'finish a module on it' : l === 2 ? 'a demo, or a medium drill at 70%+' : l === 3 ? 'use it at work' : 'teach it to a junior'}
+                    {l === 1 ? 'finish a module on it' : l === 2 ? 'a demo, a basics lab, or a medium drill at 70%+' : l === 3 ? 'use it at work' : 'teach it to a junior'}
                   </span>
                 )}
               </span>

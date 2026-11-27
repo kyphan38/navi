@@ -13,7 +13,14 @@ import type { Gloss } from '@/types/navi';
 export default function Glossed({ text, glossary, className = '' }: { text: string; glossary: readonly Gloss[]; className?: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const [saved, setSaved] = useState<Set<string>>(new Set());
-  const parts = splitCode(text).flatMap((c) => (c.code ? [{ text: c.text, term: null, code: true }] : markTerms(c.text, glossary.map((g) => g.term)).map((m) => ({ ...m, code: false }))));
+  const parts = splitCode(text).flatMap((c) =>
+    c.code
+      ? [{ text: c.text, term: null, code: true }]
+      : markTerms(
+          c.text,
+          glossary.map((g) => g.term),
+        ).map((m) => ({ ...m, code: false })),
+  );
   const meaning = open ? glossary.find((g) => g.term === open)?.meaning : null;
   return (
     <div className={className}>

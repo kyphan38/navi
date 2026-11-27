@@ -4,7 +4,7 @@
 import { PLAIN_ENGLISH } from '../style.ts';
 import type { Concept } from './catalog.ts';
 
-export type Kind = 'predict' | 'myth';
+export type Kind = 'predict' | 'myth' | 'command' | 'order';
 export type Gloss = { term: string; meaning: string };
 export type Question = {
   kind: Kind;
@@ -71,10 +71,17 @@ export const QUESTION_RULES = `Question rules:
 - "why": exactly 3 short lines, a cause-and-effect chain. "rule": one rule of thumb. "seeIt": one command to see it on Linux.
 - "setup": 2-3 sentences of background so someone who does not understand the prompt can answer it.`;
 
+const KIND_TEXT: Record<Kind, string> = {
+  predict: 'Kind "predict": a short real situation, then "What happens first?" (or next). 4 options, exactly one right. "answer" is its index (0-3).',
+  myth: 'Kind "myth": 3 statements about the concept that all sound right; exactly one is subtly wrong. The prompt asks "Which one is wrong?". "options" are the 3 statements, "answer" is the index of the wrong one (0-2).',
+  command:
+    'Kind "command": a short situation and a question like "Which command shows it?". 4 options, each a real Linux command (or kubectl, dig, curl...) with its flags; exactly one shows what is asked. "answer" is its index (0-3).',
+  order:
+    'Kind "order": "Put these steps in order." "options" are 4-5 short steps of what really happens under the hood, written IN THE RIGHT ORDER (the app shuffles them). "answer" is 0.',
+};
+
 function kindText(kind: Kind): string {
-  return kind === 'predict'
-    ? 'Kind "predict": a short real situation, then "What happens first?" (or next). 4 options, exactly one right. "answer" is its index (0-3).'
-    : 'Kind "myth": 3 statements about the concept that all sound right; exactly one is subtly wrong. The prompt asks "Which one is wrong?". "options" are the 3 statements, "answer" is the index of the wrong one (0-2).';
+  return KIND_TEXT[kind];
 }
 
 function levelText(level: 1 | 2 | 3): string {
@@ -146,10 +153,10 @@ function parseGloss(v: unknown): Gloss[] {
 
 export function parseQuestionData(raw: unknown, kind: Kind): Question {
   const d = (raw ?? {}) as Record<string, unknown>;
-  const options = list(d.options, kind === 'predict' ? 4 : 3, 300);
-  const want = kind === 'predict' ? 4 : 3;
-  if (options.length !== want) throw new Error(`Need ${want} options`);
-  const answer = typeof d.answer === 'number' && Number.isInteger(d.answer) ? d.answer : -1;
+  const options = list(d.options, kind === 'myth' ? 3 : kind === 'order' ? 5 : 4, 300);
+  if (kind === 'order' ? options.length < 4 : options.length !== (kind === 'myth' ? 3 : 4)) throw new Error('Wrong number of options');
+  // "order": the options are the right order; there is no single answer index.
+  const answer = kind === 'order' ? 0 : typeof d.answer === 'number' && Number.isInteger(d.answer) ? d.answer : -1;
   if (answer < 0 || answer >= options.length) throw new Error('Bad answer index');
   const why = list(d.why, 4, 300);
   if (why.length < 2) throw new Error('Missing why');
@@ -191,12 +198,21 @@ export function parseLesson(text: string): Lesson {
 
 const fakeQ = (kind: Kind, name: string): Question & Record<string, unknown> => ({
   kind,
-  prompt:
-    kind === 'predict'
-      ? `A service starts using ${name} in a wrong way under heavy load. What happens first?`
-      : `Which statement about ${name} is wrong?`,
-  options: kind === 'predict' ? ['It slows down a little', 'The kernel steps in and stops it', 'Nothing changes', 'The disk fills up'] : ['Statement A is true', 'Statement B sounds right but is wrong', 'Statement C is true'],
-  answer: 1,
+  prompt: {
+    predict: `A service starts using ${name} in a wrong way under heavy load. What happens first?`,
+    myth: `Which statement about ${name} is wrong?`,
+    command: `A pod was killed for using too much memory. Which command shows it?`,
+    order: `Put these steps in order.`,
+  }[kind],
+  options:
+    kind === 'myth'
+      ? ['Statement A is true', 'Statement B sounds right but is wrong', 'Statement C is true']
+      : kind === 'command'
+        ? ['df -h', 'dmesg | grep -i oom', 'ls -la', 'uptime']
+        : kind === 'order'
+          ? ['The program starts', 'It asks the kernel for memory', 'The kernel gives it pages', 'The program uses them']
+          : ['It slows down a little', 'The kernel steps in and stops it', 'Nothing changes', 'The disk fills up'],
+  answer: kind === 'order' ? 0 : 1,
   why: ['First this happens.', 'Because of that, the next thing breaks.', 'So you see this symptom.'],
   rule: 'Check the limits before you raise the load.',
   seeIt: 'ps aux | head',

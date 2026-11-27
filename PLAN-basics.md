@@ -1,6 +1,6 @@
 # navi - Basics (MVP)
 
-Chủ app chốt 2026-11-27. **MVP code xong 2026-11-27** (xem ghi chú cuối mục 9). Đọc `PLAN-navi.md` (nguyên tắc bất biến mục 1, tiếng Anh đơn giản mục 4) và `AGENTS.md`
+Chủ app chốt 2026-11-27. **MVP code xong 2026-11-27** (xem ghi chú cuối mục 9). **Phase 2 code xong 2026-11-27** (mục 10). Đọc `PLAN-navi.md` (nguyên tắc bất biến mục 1, tiếng Anh đơn giản mục 4) và `AGENTS.md`
 trước khi code.
 
 **Vấn đề:** chủ app làm DevOps nhưng nền tảng software/OS/network còn yếu. Muốn mỗi ngày (trưa, lúc rảnh) học và
@@ -283,7 +283,30 @@ Ghi chú khi làm (2026-11-27):
 
 ---
 
-## 10. Để sau (Phase 2)
+## 10. Phase 2 (xong 2026-11-27)
+
+Đã làm:
+- 4 deck mới, tổng 64 concept: `data` (10), `runtime` (10), `distributed` (10, có SRE: percentile, SLI/SLO, burn rate,
+  timeout/retry, idempotency, circuit breaker, queue, Little's law, quorum, CAP), `delivery` (10). Mỗi concept có `skills`
+  (id trong `SKILL_CATALOG`): dùng cho thẻ liên kết và bằng chứng lab. Bản client sinh từ bản server, test giữ giống.
+- Kiểu câu `command` (lệnh nào cho thấy điều này) và `order` (xếp 4-5 bước; options lưu đúng thứ tự, app xáo cố định
+  theo id thẻ, không bao giờ hiện đúng thứ tự). Câu ôn xoay vòng: predict → myth → command → order.
+- **Thẻ liên kết:** khi dưới 2 câu đến hạn, server chọn 1 concept đã học khớp với việc đang làm (skill của Track đang chạy,
+  skill của drill 7 ngày qua, term lưu 7 ngày qua có trong tên hoặc focus của concept), không chạm trong 3 ngày.
+  Nhãn trên thẻ: `linked to your track` / `a recent drill` / `your term "..."`.
+- Sai khi `sure` → thêm vào `mistakes` chung (`drillId: ''`, `skillId` = skill đầu của concept).
+- `go deeper` → drill `spot-the-lie` (câu myth) hoặc `why-chain` (còn lại), mức easy, chủ đề = tên concept.
+- **Explain it back** (mỗi tuần một lần, sau phiên): concept box 3+ hoặc learned, chưa giải thích 30 ngày.
+  Callable `basicsExplain` chấm (pass, good, missing, better). Không đạt → ôn lại ngày mai. Không đụng level skill.
+- **Lab cuối tuần** (thứ 7, CN, sau phiên): concept đã ôn ít nhất 1 lần, có skill, chưa làm lab. Callable `basicsLab`
+  viết một lần (`basicLabs/{id}`), chạy trong container Docker dùng xong bỏ. Bấm `done` → bằng chứng level 2
+  `kind: 'lab'` cho các skill của concept (đúng nguyên tắc 3: làm thật).
+- Map: một dòng `basics · N/64 started · M learned`.
+
+## 11. Để sau
+- Gợi ý thêm OSTEP làm một khóa trong `learn` cho buổi tối / cuối tuần.
+
+## 12. Ghi chú cũ: Để sau (Phase 2) trước khi làm
 
 - 4 deck còn lại (`data`, `runtime`, `distributed`, `delivery`).
 - Kiểu câu `order` (xếp bước) và `which command` (lệnh nào cho thấy điều này).

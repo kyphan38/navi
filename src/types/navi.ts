@@ -14,7 +14,7 @@ export type Profile = {
 export type SkillLevel = 0 | 1 | 2 | 3 | 4;
 export type Evidence = {
   level: SkillLevel;
-  kind: 'module' | 'demo' | 'drill' | 'work' | 'explain';
+  kind: 'module' | 'demo' | 'drill' | 'work' | 'explain' | 'lab';
   ref: string | null;    // module, drill or term id
   note: string;          // <= 500
   at: number;
@@ -252,13 +252,13 @@ export type Interview = {
 };
 
 // --- Basics (PLAN-basics.md 6): daily foundations, learn first then practise ---
-export type BasicKind = 'predict' | 'myth';
+export type BasicKind = 'predict' | 'myth' | 'command' | 'order';
 export type Gloss = { term: string; meaning: string };
 export type BasicQuestion = {
   kind: BasicKind;
   prompt: string;
   options: string[];
-  answer: number;          // index of the right option (for "myth": the wrong statement)
+  answer: number;          // index of the right option ("myth": the wrong statement; "order": unused, options are in order)
   why: string[];           // the cause-and-effect chain, 3 short lines
   rule: string;            // one rule of thumb
   seeIt: string;           // one command to see it yourself
@@ -276,7 +276,19 @@ export type BasicState = {
   blindSpots: number;      // wrong while "sure"
   stuck: number;           // "I don't get it"
   stuckAt: number[];       // last 5 times, for the 7-day rule
+  explainedAt?: number | null; // last "explain it back" (weekly, Phase 2)
+  labDoneAt?: number | null;   // weekend lab done (adds level 2 evidence to its skills)
   updatedAt: number;
+};
+// users/{uid}/basicLabs/{conceptId} - written by Functions
+export type BasicLab = {
+  title: string;
+  goal: string;
+  needs: string;
+  steps: { do: string; command: string; expect: string }[];
+  cleanup: string;
+  learn: string;
+  createdAt: number;
 };
 // users/{uid}/basicLessons/{conceptId} - written by Functions, read by the client
 export type BasicLesson = {
@@ -296,6 +308,7 @@ export type BasicLesson = {
 export type BasicCard = BasicQuestion & {
   conceptId: string;
   level: 1 | 2 | 3;
+  link?: string | null;    // a linked card: what of your work it ties to ("your track")
   forDay: string;
   picked: number | null;
   sure: boolean | null;

@@ -5,13 +5,15 @@ import { useState } from 'react';
 import Fold from '@/components/Fold';
 import PageHead from '@/components/PageHead';
 import Waiting from '@/components/Waiting';
+import { ExplainCard, LabCard } from '@/components/basics/Extras';
 import LessonView from '@/components/basics/LessonView';
 import { CardStep, LessonStep, useLesson } from '@/components/basics/Steps';
 import { useBasics } from '@/hooks/useBasics';
 import { useNow } from '@/hooks/useNow';
 import { aiError, basicsNow } from '@/lib/ai';
 import { CONCEPTS, DECKS } from '@/lib/basics-catalog';
-import { nextReviewIn, sessionSteps } from '@/lib/basics';
+import { explainPick, labPick, nextReviewIn, sessionSteps } from '@/lib/basics';
+import { parseDay } from '@/lib/day';
 import type { BasicState } from '@/types/navi';
 
 function SectionTitle({ children }: { children: string }) {
@@ -87,6 +89,12 @@ export default function BasicsView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const spareLesson = useLesson(uid, dayDoc?.spare ?? 'none');
+  const [pinned, setPinned] = useState<{ explain: string | null; lab: string | null }>({ explain: null, lab: null });
+  const explainNow = states && now ? explainPick(states, now) : null;
+  const weekday = day ? parseDay(day).getDay() : 1;
+  const labNow = states ? labPick(states, weekday === 0 || weekday === 6) : null;
+  // Set during render (guarded, like Review's queue): runs once per new pick.
+  if ((explainNow && !pinned.explain) || (labNow && !pinned.lab)) setPinned({ explain: pinned.explain ?? explainNow, lab: pinned.lab ?? labNow });
 
   if (!ready || !states || !day) return <main className="column" />;
 
@@ -105,6 +113,9 @@ export default function BasicsView() {
     }
   };
   const days = now ? nextReviewIn(states, now) : null;
+  // Pinned once shown: after you answer, the pick moves on, but the feedback must stay.
+  const explainId = pinned.explain ?? explainNow;
+  const labId = pinned.lab ?? labNow;
 
   return (
     <main className="column">
@@ -139,6 +150,14 @@ export default function BasicsView() {
           </div>
         )}
       </section>
+
+      {/* After today's session: once a week explain one concept, on weekends a lab. */}
+      {!current && (explainId || labId) && (
+        <section className="mt-12 space-y-10">
+          {explainId && <ExplainCard key={explainId} uid={uid} id={explainId} state={states.get(explainId)!} />}
+          {labId && <LabCard key={labId} uid={uid} id={labId} state={states.get(labId)!} />}
+        </section>
+      )}
 
       <section className="mt-12">
         <SectionTitle>library</SectionTitle>

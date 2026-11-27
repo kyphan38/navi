@@ -67,3 +67,5 @@ export const interviewFinish = call<{ id: string }, { ok: boolean }>('interviewF
 // Basics (PLAN-basics.md 7): these two run for up to 300 s on the server.
 export const basicsNow = call<Record<string, never>, { day: string }>('basicsNow', 295_000);
 export const basicsRewrite = call<{ conceptId: string; note?: string }, { version: number }>('basicsRewrite', 295_000);
+export const basicsExplain = call<{ conceptId: string; text: string }, { grade: { pass: boolean; good: string; missing: string[]; better: string } }>('basicsExplain');
+export const basicsLab = call<{ conceptId: string }, { ok: boolean }>('basicsLab', 295_000);

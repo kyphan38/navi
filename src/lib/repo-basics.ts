@@ -6,7 +6,7 @@
 import { collection, doc, onSnapshot, query, setDoc, where, writeBatch } from 'firebase/firestore';
 
 import { getDb } from '@/lib/firebase-client';
-import type { BasicCard, BasicDay, BasicLesson, BasicState } from '@/types/navi';
+import type { BasicCard, BasicDay, BasicLab, BasicLesson, BasicState } from '@/types/navi';
 
 const warn = (what: string) => (err: unknown) => console.warn(`[repo] ${what}`, err);
 const userCol = (uid: string, name: string) => collection(getDb(), 'users', uid, name);
@@ -54,3 +54,7 @@ export function answerBasicCard(
   void batch.commit().catch(warn('answer basic'));
 }
 
+/** A weekend lab; null while not written. */
+export function watchBasicLab(uid: string, conceptId: string, cb: (l: BasicLab | null) => void): () => void {
+  return onSnapshot(doc(userCol(uid, 'basicLabs'), conceptId), (snap) => cb(snap.exists() ? (snap.data() as BasicLab) : null), warn('basic lab'));
+}

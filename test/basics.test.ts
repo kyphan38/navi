@@ -14,20 +14,23 @@ const st = (status: StateLite['status'], extra: Partial<StateLite> = {}): StateL
 test('client catalog matches the server catalog', () => {
   assert.deepEqual(DECKS, SERVER_DECKS);
   assert.deepEqual(
-    CONCEPTS.map((c) => [c.id, c.deck, c.name, [...c.prereqs]]),
-    SERVER.map((c) => [c.id, c.deck, c.name, [...c.prereqs]]),
+    CONCEPTS.map((c) => [c.id, c.deck, c.name, [...c.skills], [...c.prereqs]]),
+    SERVER.map((c) => [c.id, c.deck, c.name, [...c.skills], [...c.prereqs]]),
   );
 });
 
-test('catalog: unique ids, prereqs exist and come earlier (no loops)', () => {
+test('catalog: unique ids, prereqs exist and come earlier (no loops), skills are real', async () => {
+  const { SKILL_CATALOG } = await import('@/lib/skill-level');
+  const skillIds = new Set(SKILL_CATALOG.map((s) => s.id));
   const seen = new Set<string>();
   for (const c of SERVER) {
     assert.ok(!seen.has(c.id), c.id);
     for (const p of c.prereqs) assert.ok(seen.has(p), `${c.id} needs ${p} first`);
     assert.ok(c.focus.length > 20, c.id);
+    for (const k of c.skills) assert.ok(skillIds.has(k), `${c.id}: unknown skill ${k}`);
     seen.add(c.id);
   }
-  assert.equal(SERVER.length, 24);
+  assert.equal(SERVER.length, 64);
 });
 
 test('nextConcept: deck order, catalog order, prereqs must be started', () => {
@@ -64,7 +67,9 @@ test('levelFor, nextKind and deckStuck', () => {
   assert.deepEqual([1, 2, 3, 4, 5].map(levelFor), [1, 2, 2, 3, 3]);
   assert.equal(nextKind(null), 'predict');
   assert.equal(nextKind('predict'), 'myth');
-  assert.equal(nextKind('myth'), 'predict');
+  assert.equal(nextKind('myth'), 'command');
+  assert.equal(nextKind('command'), 'order');
+  assert.equal(nextKind('order'), 'predict');
   const s = new Map([
     ['process', st('learning', { stuckAt: [NOW - DAY] })],
     ['tcp-close', st('learning', { stuckAt: [NOW - DAY] })],
@@ -186,4 +191,78 @@ test('splitCode and asCodeBlock handle the way the model writes commands', async
   assert.equal(asCodeBlock('Run ```ps -o pid``` here'), '```\nRun ps -o pid here\n```');
   assert.equal(asCodeBlock('```bash\n$ ps -ef\nPID CMD\n```'), '```\n$ ps -ef\nPID CMD\n```');
   assert.equal(asCodeBlock('$ free -h'), '```\n$ free -h\n```');
+});
+
+test('command and order questions parse; order needs 4-5 steps', async () => {
+  const { fakeQuestion, parseQuestion } = await import('../functions/src/basics/prompts.ts');
+  assert.equal(parseQuestion(fakeQuestion('command', 'X'), 'command').options.length, 4);
+  const o = parseQuestion(fakeQuestion('order', 'X'), 'order');
+  assert.equal(o.answer, 0);
+  const raw = JSON.parse(fakeQuestion('order', 'X'));
+  assert.throws(() => parseQuestion(JSON.stringify({ ...raw, options: ['a', 'b', 'c'] }), 'order'));
+});
+
+test('shuffled is stable, a real shuffle, never the right order; orderRight', async () => {
+  const { shuffled, orderRight } = await import('@/lib/basics');
+  const a = shuffled(5, 'card-1');
+  assert.deepEqual(a, shuffled(5, 'card-1'));
+  assert.deepEqual([...a].sort(), [0, 1, 2, 3, 4]);
+  for (const seed of ['x', 'y', 'z', 'card-2', 'card-3']) assert.notDeepEqual(shuffled(4, seed), [0, 1, 2, 3]);
+  assert.equal(orderRight([0, 1, 2, 3], 4), true);
+  assert.equal(orderRight([1, 0, 2, 3], 4), false);
+  assert.equal(orderRight([0, 1, 2], 4), false);
+});
+
+test('linkedConcept: learned concepts that fit current work, not rested, best score then oldest', async () => {
+  const { linkedConcept } = await import('../functions/src/basics/pick.ts');
+  const old = NOW - 10 * DAY;
+  const s = new Map<string, StateLite>([
+    ['dns-resolution', st('learning', { updatedAt: old })],
+    ['dns-ttl', st('learned', { updatedAt: old - DAY })],
+    ['tcp-close', st('learning', { updatedAt: old })],
+    ['tls-handshake', st('learning', { updatedAt: NOW - DAY })], // touched lately: rests
+    ['process', st('reading', { updatedAt: old })],
+  ]);
+  const work = { skills: new Set(['dns', 'tls']), terms: [] };
+  assert.deepEqual(linkedConcept(s, work, [], NOW), { id: 'dns-ttl', skill: 'dns', term: null });
+  assert.deepEqual(linkedConcept(s, work, ['dns-ttl'], NOW), { id: 'dns-resolution', skill: 'dns', term: null });
+  // A recent term counts too.
+  assert.deepEqual(linkedConcept(s, { skills: new Set(), terms: ['TIME_WAIT'] }, [], NOW), { id: 'tcp-close', skill: null, term: 'TIME_WAIT' });
+  assert.equal(linkedConcept(s, { skills: new Set(['iac']), terms: [] }, [], NOW), null);
+});
+
+test('explainPick: once a week, box 3+ or learned, not explained in 30 days, oldest first', async () => {
+  const { explainPick } = await import('@/lib/basics');
+  const mk = (box: 1 | 2 | 3 | 4 | 5, updatedAt: number, extra: Partial<BasicState> = {}): BasicState => ({ ...opened('linux', NOW), status: 'learning', box, updatedAt, ...extra });
+  const s = new Map<string, BasicState>([
+    ['process', mk(2, NOW - 20 * DAY)],
+    ['syscall', mk(3, NOW - 5 * DAY)],
+    ['thread', mk(4, NOW - 9 * DAY)],
+  ]);
+  assert.equal(explainPick(s, NOW), 'thread');
+  s.set('thread', mk(4, NOW - 9 * DAY, { explainedAt: NOW - 3 * DAY }));
+  assert.equal(explainPick(s, NOW), null); // one this week already
+  s.set('thread', mk(4, NOW - 9 * DAY, { explainedAt: NOW - 10 * DAY }));
+  assert.equal(explainPick(s, NOW), 'syscall'); // thread explained less than 30 days ago
+});
+
+test('labPick: weekends only, reviewed once, has a skill, no lab yet', async () => {
+  const { labPick } = await import('@/lib/basics');
+  const s = new Map<string, BasicState>([
+    ['process', { ...opened('linux', NOW), status: 'learning', box: 1 }],
+    ['syscall', { ...opened('linux', NOW), status: 'learning', box: 2, labDoneAt: NOW }],
+    ['thread', { ...opened('linux', NOW), status: 'learned', box: 5 }],
+  ]);
+  assert.equal(labPick(s, false), null);
+  assert.equal(labPick(s, true), 'thread');
+});
+
+test('extras: explain and lab prompts and parsers', async () => {
+  const { PLAIN_ENGLISH } = await import('../functions/src/style.ts');
+  const x = await import('../functions/src/basics/extras.ts');
+  assert.ok(x.buildExplainPrompt(SERVER[0], 'my words').startsWith(PLAIN_ENGLISH));
+  assert.match(x.buildLabPrompt(SERVER[0], 'SRE'), /Never touch real servers/);
+  assert.equal(x.parseExplain(x.fakeExplain()).pass, true);
+  assert.ok(x.parseLab(x.fakeLab()).steps.length >= 3);
+  assert.throws(() => x.parseLab(JSON.stringify({ title: 't', steps: [] })));
 });

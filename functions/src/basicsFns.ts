@@ -10,7 +10,7 @@ import { logger } from 'firebase-functions';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import { onSchedule } from 'firebase-functions/scheduler';
 import { CONCEPTS, conceptOf, isConceptId } from './basics/catalog.ts';
-import { deckStuck, levelFor, nextKind, pickSession, vnDay, type StateLite } from './basics/pick.ts';
+import { MAX_REVIEWS, deckStuck, levelFor, linkedConcept, nextKind, pickSession, vnDay, type StateLite } from './basics/pick.ts';
 import { LESSON_SCHEMA, QUESTION_SCHEMA, buildLessonPrompt, buildQuestionPrompt, fakeLesson, fakeQuestion, parseLesson, parseQuestion } from './basics/prompts.ts';
 import { ALLOWED_USER_EMAIL, GEMINI_API_KEY, GEMINI_MODEL_START, GEMINI_THINKING_START, OPTS, ask, guard, loadProfile, thinkingOf } from './shared.ts';
 
@@ -34,6 +34,24 @@ async function writeLesson(uid: string, id: string, states: ReadonlyMap<string, 
   await getFirestore().doc(`users/${uid}/basicLessons/${id}`).set({ ...lesson, version, createdAt: Date.now() });
 }
 
+/** What the learner works on now (PLAN-basics.md 10): the running track, drills and terms of the last 7 days. */
+async function loadWork(uid: string, now: number): Promise<{ track: Set<string>; drills: Set<string>; terms: string[] }> {
+  const db = getFirestore();
+  const since = now - 7 * 86_400_000;
+  const [ms, drills, terms] = await Promise.all([
+    db.collection(`users/${uid}/milestones`).where('kind', '==', 'track').get(),
+    db.collection(`users/${uid}/drills`).where('doneAt', '>=', since).get(),
+    db.collection(`users/${uid}/terms`).where('createdAt', '>=', since).get(),
+  ]);
+  const track = new Set<string>();
+  for (const d of ms.docs) {
+    if (d.get('doneAt') !== null) continue;
+    for (const n of (d.get('needs') as { skillId: string }[] | undefined) ?? []) track.add(n.skillId);
+  }
+  const drillSkills = new Set<string>(drills.docs.flatMap((d) => (d.get('skillIds') as string[] | undefined) ?? []));
+  return { track, drills: drillSkills, terms: terms.docs.map((d) => String(d.get('name') ?? '')).filter(Boolean) };
+}
+
 /**
  * Writes what today's session needs: the lesson for `next` and `spare` if missing,
  * one review question per due concept (skipped when already there), and the day doc.
@@ -43,7 +61,22 @@ export async function prepareDay(uid: string, now: number): Promise<string> {
   const db = getFirestore();
   const day = vnDay(now);
   const [states, profile] = await Promise.all([loadStates(uid), loadProfile(uid)]);
-  const { reviews, next, spare } = pickSession(states, now);
+  const picked = pickSession(states, now);
+  const { next, spare } = picked;
+  const reviews = [...picked.reviews];
+  // Fewer than 2 reviews due: one learned concept that fits what you work on now.
+  const links = new Map<string, string>();
+  if (reviews.length < MAX_REVIEWS) {
+    const work = await loadWork(uid, now).catch((err) => {
+      logger.warn('basics work signals failed', err instanceof Error ? err.message : String(err));
+      return { track: new Set<string>(), drills: new Set<string>(), terms: [] as string[] };
+    });
+    const l = linkedConcept(states, { skills: new Set([...work.track, ...work.drills]), terms: work.terms }, reviews, now);
+    if (l) {
+      reviews.push(l.id);
+      links.set(l.id, l.term ? `your term "${l.term}"` : l.skill && work.track.has(l.skill) ? 'your track' : 'a recent drill');
+    }
+  }
 
   const lessonIds = [next, spare].filter((x): x is string => !!x);
   const have = await Promise.all(lessonIds.map((id) => db.doc(`users/${uid}/basicLessons/${id}`).get()));
@@ -63,7 +96,7 @@ export async function prepareDay(uid: string, now: number): Promise<string> {
     const level = (deckStuck(c.deck, states, now) ? Math.max(1, base - 1) : base) as 1 | 2 | 3;
     jobs.push(
       ask(buildQuestionPrompt(c, kind, level, knownNames(states), profile.role), QUESTION_SCHEMA, (t) => parseQuestion(t, kind), () => fakeQuestion(kind, c.name), strong()).then((q) =>
-        cardRefs[i].set({ ...q, conceptId: id, level, forDay: day, picked: null, sure: null, result: null, answeredAt: null, createdAt: Date.now() }),
+        cardRefs[i].set({ ...q, conceptId: id, level, link: links.get(id) ?? null, forDay: day, picked: null, sure: null, result: null, answeredAt: null, createdAt: Date.now() }),
       ),
     );
   });
