@@ -17,7 +17,7 @@ const DAY = 86_400_000;
 
 export const LEVEL_NAMES = ['', 'know', 'do', 'use', 'teach'] as const;
 
-/** Starter skills for a DevOps/SRE on a payment app (seeded once on the Map page). */
+/** Starter skills for a DevOps engineer / SRE on a payment app (seeded once on the Map page). */
 export const SKILL_CATALOG: readonly { id: string; name: string; area: string }[] = [
   { id: 'iam-policies', name: 'IAM policies', area: 'Cloud & security' },
   { id: 'iam-roles', name: 'IAM roles and trust', area: 'Cloud & security' },
@@ -48,6 +48,13 @@ export const SKILL_CATALOG: readonly { id: string; name: string; area: string }[
   { id: 'ai-tools', name: 'Using AI tools safely', area: 'AI' },
   // Next steps on the path: DevOps -> Platform -> AI infra.
   { id: 'failure-modes', name: 'Failure modes and blast radius', area: 'Observability & reliability' },
+  // SRE (2026-11-27): the reliability practices an SRE role asks for beyond monitoring and SLOs.
+  { id: 'on-call', name: 'On-call and alert quality (paging, runbooks)', area: 'Observability & reliability' },
+  { id: 'toil-automation', name: 'Toil and automation', area: 'Observability & reliability' },
+  { id: 'resilience-patterns', name: 'Timeouts, retries and circuit breakers', area: 'Observability & reliability' },
+  { id: 'load-testing', name: 'Load testing and performance', area: 'Observability & reliability' },
+  { id: 'chaos-engineering', name: 'Chaos engineering and game days', area: 'Observability & reliability' },
+  { id: 'release-safety', name: 'Safe releases (canary, feature flags, rollback)', area: 'IaC & CI/CD' },
   { id: 'linux-perf', name: 'Linux performance (CPU, memory, disk, network)', area: 'Linux & networking' },
   { id: 'k8s-core', name: 'Kubernetes core (pods, scheduling, resources)', area: 'Containers & Kubernetes' },
   { id: 'k8s-networking', name: 'Kubernetes networking (Service, Ingress, CNI)', area: 'Containers & Kubernetes' },

@@ -609,3 +609,9 @@ Ghi chú khi làm:
   (Search API), tiêu đề RSS của InfoQ, The New Stack (feed theo chuyên mục) và The Register (lọc theo chuyên mục trong URL).
   Không dùng TechCrunch, Wired (chủ app bỏ). Trang News xếp lại: devops and cloud, banking and payments, postmortem,
   community, rồi danh sách đã lưu. Dòng "why" của AI: một việc cụ thể để làm hoặc kiểm tra, không giải thích trong ngoặc.
+- Basics (học nền tảng software/OS/network mỗi ngày: đọc bài ngắn, kiểm tra, ôn Leitner theo concept): xem `PLAN-basics.md` (chốt 2026-11-27, chưa làm).
+- SRE (2026-11-27, chủ app yêu cầu): thêm 6 skill mặc định (`on-call`, `toil-automation`, `resilience-patterns`,
+  `load-testing`, `chaos-engineering` trong Observability & reliability; `release-safety` trong IaC & CI/CD). Người dùng
+  cũ bấm `add them` trên Map. Target role có 4 lựa chọn nhanh (Senior DevOps engineer, SRE, Senior SRE, Platform engineer);
+  prompt target role ưu tiên skill reliability khi role là SRE. Phỏng vấn, chủ đề drill (alert storm, error budget,
+  burn rate, toil, timeout) và prompt News có thêm góc SRE.

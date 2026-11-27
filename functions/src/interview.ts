@@ -30,9 +30,9 @@ export function followUpAllowed(turns: Turn[]): boolean {
 
 const KIND_TEXT: Record<InterviewKind, string> = {
   troubleshooting:
-    'Troubleshooting: give a short production problem (symptom, a few numbers) and ask how they would find and fix it. Probe for order of checks, safety and who to tell.',
+    'Troubleshooting: give a short production problem (symptom, a few numbers) and ask how they would find and fix it. Probe for order of checks, safety and who to tell. Sometimes use an SRE angle: an SLO burning fast, a noisy alert, a retry storm.',
   design:
-    'System design for infrastructure: ask them to design or change part of a system (for example, a payment API across two regions, a CI/CD pipeline, secrets handling). Probe for trade-offs, failure modes, security and cost.',
+    'System design for infrastructure: ask them to design or change part of a system (for example, a payment API across two regions, a CI/CD pipeline, secrets handling, SLOs and alerts for a service, a safe release process). Probe for trade-offs, failure modes, security and cost.',
   behavioral:
     'Behavioral: ask "Tell me about a time when..." questions (conflict, a mistake, pressure, saying no, learning fast). Expect STAR answers: situation, task, action, result.',
 };

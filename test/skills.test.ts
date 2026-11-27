@@ -103,3 +103,9 @@ test('pillarMigration moves only starter skills still in an old area', async () 
   assert.deepEqual(moves, [{ id: 'dns', area: 'Linux & networking' }]);
   for (const p of PILLARS) assert.ok(SKILL_CATALOG.filter((s) => s.area === p).length >= 4, p);
 });
+
+test('SRE starter skills exist in the reliability and delivery pillars', () => {
+  const area = (id: string) => SKILL_CATALOG.find((s) => s.id === id)?.area;
+  for (const id of ['on-call', 'toil-automation', 'resilience-patterns', 'load-testing', 'chaos-engineering']) assert.equal(area(id), 'Observability & reliability', id);
+  assert.equal(area('release-safety'), 'IaC & CI/CD');
+});

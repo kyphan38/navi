@@ -11,6 +11,8 @@ import { learnNext, roleGaps, roleReadiness } from '@/lib/role';
 import type { SkillLevel, TargetRole as Role } from '@/types/navi';
 
 const LEVELS = [1, 2, 3, 4] as const;
+/** Common targets; tap one to fill the box, then compare. */
+const ROLE_PICKS = ['Senior DevOps engineer', 'Site reliability engineer (SRE)', 'Senior SRE', 'Platform engineer'] as const;
 
 /** Needed skills and levels, editable before saving. */
 function NeedsEditor({ title, needs, skills, createdAt, onDone }: { title: string; needs: Role['needs']; skills: SkillView[]; createdAt: number | null; onDone: () => void }) {
@@ -132,12 +134,21 @@ export default function TargetRole({ role, skills }: { role: Role | null; skills
           }}
           className="flex items-baseline gap-3"
         >
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="for example: Senior DevOps engineer" aria-label="Target role" className="min-w-0 flex-1 border-b border-line bg-transparent pb-1 text-[15px] text-ink placeholder:text-faint focus:border-line-strong" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="for example: Senior SRE" aria-label="Target role" className="min-w-0 flex-1 border-b border-line bg-transparent pb-1 text-[15px] text-ink placeholder:text-faint focus:border-line-strong" />
           <button type="submit" disabled={title.trim().length < 3} className="font-mono text-[12px] text-faint hover:text-ink disabled:opacity-30">
             compare
           </button>
           {error && <span className="text-[14px] text-muted">{error}</span>}
         </form>
+      )}
+      {!role && !draft && !busy && (
+        <p className="mt-2 flex flex-wrap gap-x-4 font-mono text-[12px]">
+          {ROLE_PICKS.map((r) => (
+            <button key={r} type="button" onClick={() => setTitle(r)} className="text-faint hover:text-ink">
+              {r}
+            </button>
+          ))}
+        </p>
       )}
     </div>
   );

@@ -67,8 +67,8 @@ Map skill mặc định -> trụ cột (theo id; skill tự thêm không bị đ
 |---|---|
 | Linux & networking | `linux-perf`, `vpc`, `dns`, `tls`, `load-balancers` |
 | Containers & Kubernetes | `containers`, `k8s-core`, `k8s-networking`, `multi-tenancy` |
-| IaC & CI/CD | `iac`, `cicd`, `change-management`, `gitops`, `golden-paths` |
-| Observability & reliability | `monitoring`, `observability`, `incident-response`, `slo`, `scaling`, `backup-dr`, `failure-modes` |
+| IaC & CI/CD | `iac`, `cicd`, `change-management`, `gitops`, `golden-paths`, `release-safety` |
+| Observability & reliability | `monitoring`, `observability`, `incident-response`, `slo`, `scaling`, `backup-dr`, `failure-modes`, SRE (2026-11-27): `on-call`, `toil-automation`, `resilience-patterns`, `load-testing`, `chaos-engineering` |
 | Cloud & security | `iam-policies`, `iam-roles`, `kms-encryption`, `s3-security`, `network-security`, `secrets`, `audit-logging`, `guardrails` |
 | Giữ area cũ (không phải trụ cột) | `databases` (Data), `payment-flows`, `reconciliation` (Payments), `status-updates`, `postmortems` (Communication), `ai-tools` (AI), 5 skill `AI infra` |
 

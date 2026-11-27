@@ -101,7 +101,7 @@ const BLOCKS: Block[] = [
   {
     title: 'career',
     lines: [
-      'target role: type the role you want (for example Senior DevOps). AI picks the skills and levels it needs; change the levels, then save. Career then shows how ready you are, what is missing, thin evidence, and what to learn next. The drill topic on Today then takes turns between your course and the skills the role still needs.',
+      'target role: type the role you want, or tap one: Senior DevOps engineer, Site reliability engineer (SRE), Senior SRE, Platform engineer. AI picks the skills and levels it needs; change the levels, then save. Career then shows how ready you are, what is missing, thin evidence, and what to learn next. The drill topic on Today then takes turns between your course and the skills the role still needs.',
       'stories: STAR stories (situation, task, action, result) for 1:1s and interviews. Write one yourself, or let AI draft one from a finished drill or a "used at work" note, then edit it.',
       '1:1 prep: notes for a date range, ready to copy before a meeting with your manager. Your stories are listed too.',
       'brag doc: pick a quarter and write. AI makes one page for your review, only from what the app recorded. Copy it or download it as .md.',

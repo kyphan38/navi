@@ -217,6 +217,8 @@ Their target role: "${role}".
 From the skills below, pick the ones this role really needs (usually 8-15) and the level each needs:
 1 = learned it, 2 = practised it, 3 = uses it at work, 4 = can teach it.
 Be realistic for this role at a bank, not a wish list.
+If the role is SRE (site reliability engineering), weigh reliability skills higher: SLOs, monitoring, on-call,
+incident response, resilience patterns, capacity, safe releases, toil and automation.
 
 Skills (id: name, area):
 ${skills.map((s) => `- ${s.id}: ${s.name} (${s.area})`).join('\n')}

@@ -16,7 +16,7 @@ const dateFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short
 export function buildDigestPrompt(context: string, now: number): string {
   return `${PLAIN_ENGLISH}
 
-Today is ${dateFmt.format(now)}. Search the web for posts from the last 7 days that matter to a DevOps / Platform
+Today is ${dateFmt.format(now)}. Search the web for posts from the last 7 days that matter to a DevOps / SRE / Platform
 engineer who works on a ${context}.
 Use ONLY these sources. A post from any other site will be thrown away.
 
