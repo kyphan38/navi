@@ -10,7 +10,22 @@ const BLOCKS: Block[] = [
     title: 'places',
     lines: [
       'Six places: today, practice, learn, map, career, settings.',
-      'practice holds drill, interview and review. learn holds your courses, terms and news. career holds your target role, ask a senior, stories, 1:1 prep and the brag doc. Switch between them with the words at the top of the page.',
+      'practice holds drill, interview, review and basics. learn holds your courses, terms and news. career holds your target role, ask a senior, stories, 1:1 prep and the brag doc. Switch between them with the words at the top of the page.',
+    ],
+  },
+  {
+    title: 'basics',
+    lines: [
+      'Foundations of Linux and networks, a few minutes a day: first learn, then practise.',
+      'Each day: one new lesson with a check question right after it, and up to 2 review questions. It is ready every morning, so there is no wait.',
+      'A lesson has fixed parts: the problem, how it works, a picture, a command to see it yourself, a common mistake, where you meet it at work.',
+      'Tap a dotted word to see what it means. save term adds it to your terms.',
+      'Before you answer, pick guess or sure. Wrong while sure is a wrong belief, worth fixing first.',
+      'I don\'t get it shows the background first. It is not counted as wrong; the concepts it needs come back for review.',
+      'I know this skips the lesson and goes to the check. If you miss it, the lesson opens before you go on.',
+      'Reviews come back after 1, 3, 7, 14 and 30 days, a little harder each time and from another angle.',
+      'library lists every concept by deck. Tap one you have started to read it again; looks wrong rewrites a lesson.',
+      'Basics never raise skill levels: only real evidence does.',
     ],
   },
   {

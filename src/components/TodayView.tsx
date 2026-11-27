@@ -11,6 +11,7 @@ import { useTerms } from '@/hooks/useTerms';
 import { useStartDrill } from '@/hooks/useStartDrill';
 import { useTick } from '@/hooks/useTick';
 import { useTodayDrill } from '@/hooks/useTodayDrill';
+import { BasicsLink, useBasicsLine } from '@/components/basics/BasicsStop';
 import { parseDay } from '@/lib/day';
 import { scorePercent, typeLabel } from '@/lib/drills';
 import { dueItems } from '@/lib/leitner';
@@ -34,6 +35,7 @@ export default function TodayView() {
   const { day, mistakes, now, learning, pick, redo, next, area } = useTodayDrill();
   const { start, busy, error } = useStartDrill();
   const terms = useTerms();
+  const basics = useBasicsLine();
   // Review shows once anything is in review; done = nothing due right now. At most 5 a day.
   const inReview = (terms ?? []).some((t) => t.status === 'learning') || (mistakes ?? []).some((m) => m.nextReviewAt !== null);
   const due = terms && mistakes && now ? dueItems([...terms, ...mistakes], now).length : 0;
@@ -122,6 +124,11 @@ export default function TodayView() {
               </span>
             )}
           </Stop>
+          {basics && (
+            <Stop done={basics.done} label="basics">
+              <BasicsLink line={basics} />
+            </Stop>
+          )}
           {inReview && (
             <Stop done={due === 0} label="review">
               {due > 0 ? (

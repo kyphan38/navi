@@ -1,6 +1,6 @@
 # navi - Basics (MVP)
 
-Chủ app chốt 2026-11-27. Đọc `PLAN-navi.md` (nguyên tắc bất biến mục 1, tiếng Anh đơn giản mục 4) và `AGENTS.md`
+Chủ app chốt 2026-11-27. **MVP code xong 2026-11-27** (xem ghi chú cuối mục 9). Đọc `PLAN-navi.md` (nguyên tắc bất biến mục 1, tiếng Anh đơn giản mục 4) và `AGENTS.md`
 trước khi code.
 
 **Vấn đề:** chủ app làm DevOps nhưng nền tảng software/OS/network còn yếu. Muốn mỗi ngày (trưa, lúc rảnh) học và
@@ -273,6 +273,13 @@ Chữ UI tối thiểu (AGENTS.md). Không điểm, không streak. Chỉ một n
   hôm sau (đổi giờ giả) câu ôn hiện đúng; ô heatmap sáng.
 - Thử thật với key: đọc 3 bài linux đầu, tự kiểm nội dung đúng (chủ app hoặc so với OSTEP / man page).
 - Trang đọc được ở 375px. File dưới ~500 dòng. Không em dash.
+
+Ghi chú khi làm (2026-11-27):
+- Bài mới được viết sẵn cùng một bài dự phòng (`spare`), để `one more` không phải chờ. Ngày lưu ở `basicDays/{day}`.
+- Luật "khó hơn sau stuck" đơn giản hơn plan: khi deck có từ 2 lần `I don't get it` trong 7 ngày, câu ôn của deck đó
+  thấp hơn một level (thay vì đếm đúng 3 câu).
+- Sau `I don't get it`, câu trả lời không chấm (result `stuck`) dù đúng hay sai; chỉ hiện đáp án và giải thích.
+- `I know this` mà sai: bài đọc mở ra, chỉ lưu kết quả khi bấm `continue`.
 
 ---
 

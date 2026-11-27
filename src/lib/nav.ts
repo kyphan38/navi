@@ -14,6 +14,7 @@ export const PLACES: readonly { place: Place; href: string; pages: readonly SubP
       { label: 'drill', href: '/drill/' },
       { label: 'interview', href: '/interview/' },
       { label: 'review', href: '/review/' },
+      { label: 'basics', href: '/basics/' },
     ],
   },
   {

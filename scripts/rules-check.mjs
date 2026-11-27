@@ -101,6 +101,13 @@ await expect('owner counts a review on a new day', true, () =>
 );
 await expect('owner counts a review on an existing day', true, () => updateDoc(mine('days', '2000-01-03'), { reviews: increment(1), updatedAt: 2 }));
 
+const basic = { deck: 'linux', status: 'learning', readAt: 1, box: 2, nextReviewAt: 5, lastKind: 'predict', blindSpots: 0, stuck: 1, stuckAt: [3], updatedAt: 1 };
+await expect('owner writes a valid basics state', true, () => setDoc(mine('basics', 'rules-check'), basic));
+await expect('owner writes a basics state with box 9', false, () => setDoc(mine('basics', 'rules-check'), { ...basic, box: 9 }));
+await expect('owner writes a basic lesson', false, () => setDoc(mine('basicLessons', 'process'), { problem: 'x' }));
+await expect('owner creates a basic card', false, () => setDoc(mine('basicCards', '2000-01-01_process'), { prompt: 'x' }));
+await deleteDoc(mine('basics', 'rules-check')).catch(() => {});
+
 const track = {
   area: 'Cloud & security',
   rung: 'mid',

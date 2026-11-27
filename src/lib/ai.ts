@@ -8,8 +8,8 @@ import type { DrillLevel, DrillType } from '@/types/navi';
 // Above the functions' 180 s limit is pointless; a strong model can take ~50 s.
 const TIMEOUT = 175_000;
 
-function call<In, Out>(name: string) {
-  return (data: In) => httpsCallable<In, Out>(getFunctionsClient(), name, { timeout: TIMEOUT })(data).then((r) => r.data);
+function call<In, Out>(name: string, timeout = TIMEOUT) {
+  return (data: In) => httpsCallable<In, Out>(getFunctionsClient(), name, { timeout })(data).then((r) => r.data);
 }
 
 export const startDrill = call<{ type: DrillType; level: DrillLevel; topic?: string; redoOf?: string; skillId?: string }, { id: string }>('drillStart');
@@ -63,3 +63,7 @@ export const roleNeeds = call<{ role: string }, { needs: { skillId: string; leve
 export const interviewStart = call<{ kind: 'troubleshooting' | 'design' | 'behavioral' }, { id: string }>('interviewStart');
 export const interviewAnswer = call<{ id: string; answer: string }, { over: boolean }>('interviewAnswer');
 export const interviewFinish = call<{ id: string }, { ok: boolean }>('interviewFinish');
+
+// Basics (PLAN-basics.md 7): these two run for up to 300 s on the server.
+export const basicsNow = call<Record<string, never>, { day: string }>('basicsNow', 295_000);
+export const basicsRewrite = call<{ conceptId: string; note?: string }, { version: number }>('basicsRewrite', 295_000);

@@ -17,8 +17,8 @@
 // offline tap over to the shelf still works.
 // ============================================================
 
-const CACHE_VERSION = 'navi-v2';
-const PAGES = ['/', '/drill/', '/drill/play/', '/review/', '/learn/', '/terms/', '/map/', '/career/', '/interview/', '/ask/', '/news/', '/settings/', '/guide/', '/login/'];
+const CACHE_VERSION = 'navi-v3';
+const PAGES = ['/', '/drill/', '/drill/play/', '/review/', '/basics/', '/learn/', '/terms/', '/map/', '/career/', '/interview/', '/ask/', '/news/', '/settings/', '/guide/', '/login/'];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

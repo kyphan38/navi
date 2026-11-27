@@ -15,3 +15,4 @@ export { monthlyReview } from './monthFns.ts';
 export { askSenior } from './seniorFns.ts';
 export { drillFromAsk, drillFromPostmortem, storyDraft, moduleExam, bragDoc, roleNeeds } from './careerFns.ts';
 export { interviewStart, interviewAnswer, interviewFinish } from './interviewFns.ts';
+export { basicsDaily, basicsNow, basicsRewrite } from './basicsFns.ts';

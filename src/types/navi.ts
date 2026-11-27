@@ -250,3 +250,58 @@ export type Interview = {
   feedback: { overall: string; questions: { score: number; note: string; better: string }[]; practise: string[] } | null;
   createdAt: number; doneAt: number | null;
 };
+
+// --- Basics (PLAN-basics.md 6): daily foundations, learn first then practise ---
+export type BasicKind = 'predict' | 'myth';
+export type Gloss = { term: string; meaning: string };
+export type BasicQuestion = {
+  kind: BasicKind;
+  prompt: string;
+  options: string[];
+  answer: number;          // index of the right option (for "myth": the wrong statement)
+  why: string[];           // the cause-and-effect chain, 3 short lines
+  rule: string;            // one rule of thumb
+  seeIt: string;           // one command to see it yourself
+  glossary: Gloss[];       // hard words in the prompt
+  setup: string;           // 2-3 sentences of background for "I don't get it"
+};
+// users/{uid}/basics/{conceptId} - written by the client
+export type BasicState = {
+  deck: string;
+  status: 'reading' | 'learning' | 'learned'; // reading = lesson open, check not answered yet
+  readAt: number | null;
+  box: 1 | 2 | 3 | 4 | 5;
+  nextReviewAt: number | null;
+  lastKind: BasicKind | null;
+  blindSpots: number;      // wrong while "sure"
+  stuck: number;           // "I don't get it"
+  stuckAt: number[];       // last 5 times, for the 7-day rule
+  updatedAt: number;
+};
+// users/{uid}/basicLessons/{conceptId} - written by Functions, read by the client
+export type BasicLesson = {
+  problem: string;
+  how: string[];
+  picture: string;
+  seeIt: string;
+  mistake: string;
+  atWork: string;
+  readMore: string;
+  glossary: Gloss[];
+  check: BasicQuestion;
+  version: number;
+  createdAt: number;
+};
+// users/{uid}/basicCards/{day_conceptId} - review questions, written by Functions; the client sets only the answer
+export type BasicCard = BasicQuestion & {
+  conceptId: string;
+  level: 1 | 2 | 3;
+  forDay: string;
+  picked: number | null;
+  sure: boolean | null;
+  result: 'right' | 'wrong' | 'stuck' | null;
+  answeredAt: number | null;
+  createdAt: number;
+};
+// users/{uid}/basicDays/{YYYY-MM-DD} - today's session, written by Functions
+export type BasicDay = { next: string | null; spare: string | null; reviews: string[]; createdAt: number };

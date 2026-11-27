@@ -149,6 +149,20 @@ service cloud.firestore {
         && (t.summary == null || t.summary is map);
     }
 
+    // Basics (PLAN-basics.md 6): the learner's state per concept.
+    function validBasic(d) {
+      return d.keys().hasOnly(['deck','status','readAt','box','nextReviewAt','lastKind','blindSpots','stuck','stuckAt','updatedAt'])
+        && str(d.deck, 40)
+        && d.status in ['reading','learning','learned']
+        && optInt(d.readAt)
+        && box(d.box) && optInt(d.nextReviewAt)
+        && (d.lastKind == null || d.lastKind in ['predict','myth'])
+        && d.blindSpots is int && d.blindSpots >= 0
+        && d.stuck is int && d.stuck >= 0
+        && d.stuckAt is list && d.stuckAt.size() <= 5
+        && d.updatedAt is int;
+    }
+
     function validMilestone(d) {
       return d.keys().hasOnly(['title','kind','courseId','needs','checklist','order','doneAt','track'])
         && (!('courseId' in d) || optStr(d.courseId, 100))
@@ -252,6 +266,31 @@ service cloud.firestore {
         && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && validDay(request.resource.data);
       allow delete: if false;
+    }
+    match /users/{uid}/basics/{id} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid) && id.matches('^[a-z0-9-]{1,40}$') && validBasic(request.resource.data);
+      allow delete: if false;
+    }
+    // Lessons and the day's session are written by Functions only.
+    match /users/{uid}/basicLessons/{id} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    match /users/{uid}/basicDays/{id} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+    // Review questions: the client may only record its answer.
+    match /users/{uid}/basicCards/{id} {
+      allow read: if isOwner(uid);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['picked','sure','result','answeredAt'])
+        && (request.resource.data.picked == null || request.resource.data.picked is int)
+        && (request.resource.data.sure == null || request.resource.data.sure is bool)
+        && request.resource.data.result in ['right','wrong','stuck']
+        && request.resource.data.answeredAt is int;
+      allow create, delete: if false;
     }
     match /users/{uid}/milestones/{id} {
       allow read, delete: if isOwner(uid);
