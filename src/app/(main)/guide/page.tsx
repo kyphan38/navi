@@ -161,6 +161,14 @@ const BLOCKS: Block[] = [
       'Theme, hints (on, off, or show again), and export .json for a copy of everything.',
     ],
   },
+  {
+    title: 'shortcuts',
+    lines: [
+      'For a keyboard. On Windows, Ctrl works like ⌘.',
+      '⌘Enter: send your answer (drill, ask a senior, teach it to a junior).',
+      'Enter: save the day note, hours in the week plan, and profile fields in settings.',
+    ],
+  },
 ];
 
 export default function GuidePage() {
